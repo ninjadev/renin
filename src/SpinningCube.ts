@@ -28,10 +28,13 @@ export class SpinningCube implements ReninNode {
     this.scene.add(this.camera);
     this.camera.position.z = 10;
     this.scene.background = new Color("pink");
+    this.camera.fov = 22;
+    this.camera.aspect = 16 / 9;
+    this.camera.updateProjectionMatrix();
   }
 
   public render(renderer: WebGLRenderer) {
-    this.cube.rotation.x = +new Date() / 300;
+    this.cube.rotation.x = renin.audio.currentTime;
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
@@ -39,7 +42,6 @@ export class SpinningCube implements ReninNode {
 
 if (import.meta.hot) {
   import.meta.hot.accept((module) => {
-    console.log("accepto");
     renin.register(new module.SpinningCube());
   });
 }
