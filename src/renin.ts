@@ -5,7 +5,6 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   Scene,
-  Vector2,
   WebGLRenderer,
   WebGLRenderTarget,
 } from "three";
