@@ -1,4 +1,4 @@
-import { renin } from "./renin";
+import { renin } from "./renin/renin";
 import { SpinningCube } from "./SpinningCube";
 import "./style.css";
 import music from "./music.mp3";

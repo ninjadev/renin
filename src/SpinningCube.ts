@@ -11,7 +11,7 @@ import {
   WebGLRenderTarget,
 } from "three";
 import { colors } from "./color";
-import { renin, ReninNode } from "./renin";
+import { renin, ReninNode } from "./renin/renin";
 
 export class SpinningCube implements ReninNode {
   id = "spinningcube";
