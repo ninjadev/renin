@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from "three";
+import { colors } from "./color";
 import { renin, ReninNode } from "./renin";
 
 export class SpinningCube implements ReninNode {
@@ -27,7 +28,7 @@ export class SpinningCube implements ReninNode {
     this.scene.add(dl);
     this.scene.add(this.camera);
     this.camera.position.z = 10;
-    this.scene.background = new Color("pink");
+    this.scene.background = new Color(colors.primary);
     this.camera.fov = 22;
     this.camera.aspect = 16 / 9;
     this.camera.updateProjectionMatrix();
@@ -38,10 +39,4 @@ export class SpinningCube implements ReninNode {
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept((module) => {
-    renin.register(new module.SpinningCube());
-  });
 }
