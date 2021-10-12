@@ -2,6 +2,8 @@ import { Renin } from "./renin/renin";
 import { SpinningCube } from "./SpinningCube";
 import "./style.css";
 import music from "./music.mp3";
+import { JumpingBox } from "./JumpingBox";
+import { Add } from "./Add";
 
 // REGISTER ERROR OVERLAY
 const showErrorOverlay = (err) => {
@@ -27,12 +29,7 @@ export const renin = new Renin({
     bpm: 115,
     subdivision: 12,
   },
-  nodes: {
-    spinningcube: {
-      instance: new SpinningCube(),
-      inputs: {},
-    },
-  },
+  root: new Add(),
 });
 
 renin.loop();
