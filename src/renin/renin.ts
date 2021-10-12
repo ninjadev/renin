@@ -14,9 +14,45 @@ import defaultVert from "./default.vert.glsl";
 
 export const defaultVertexShader = defaultVert;
 
-export interface ReninNode {
-  update?: () => void;
-  render?: (frame: number, renderer: WebGLRenderer, renin: Renin) => void;
+export function children(spec: any) {
+  const store: any = {};
+  return new Proxy(spec, {
+    set: (target, prop, value) => {
+      store[prop] = value;
+      return true;
+    },
+    get: (_target, prop) => {
+      if (store[prop]) {
+        return store[prop];
+      } else {
+        store[prop] = new spec[prop]();
+        return store[prop];
+      }
+    },
+  });
+}
+
+export class ReninNode {
+  children?: { [key: string]: ReninNode };
+  id: string;
+  update(): void {}
+  render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
+
+  constructor() {
+    this.id = this.constructor.name + "-" + ((1000000 * Math.random()) | 0);
+    console.log("new", this.id);
+  }
+
+  public _render(frame: number, renderer: WebGLRenderer, renin: Renin) {
+    if ("children" in this) {
+      for (const child of Object.values(this.children || {})) {
+        child._render(frame, renderer, renin);
+      }
+    }
+    const oldRenderTarget = renderer.getRenderTarget();
+    this.render?.(frame, renderer, renin);
+    renderer.setRenderTarget(oldRenderTarget);
+  }
 }
 
 export interface Options {
@@ -25,14 +61,7 @@ export interface Options {
     bpm: number;
     subdivision: number;
   };
-  nodes: {
-    [id: string]: {
-      instance: ReninNode;
-      inputs: {
-        [key: string]: string;
-      };
-    };
-  };
+  root: ReninNode;
 }
 
 export class Renin {
@@ -41,20 +70,11 @@ export class Renin {
   height: number = 1;
   audioBar = new AudioBar();
   music = new Music();
-  nodes: Options["nodes"] = {};
   sync: Sync;
   frame = 0;
   oldTime: number = 0;
   time: number = 0;
   dt: number = 0;
-
-  register(node: ReninNode) {
-    for (const [id, item] of Object.entries(this.nodes)) {
-      if (typeof node === typeof item.instance) {
-        this.nodes[id].instance = node;
-      }
-    }
-  }
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
@@ -64,10 +84,12 @@ export class Renin {
   );
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
+  root: ReninNode;
+  screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360);
 
   constructor(options: Options) {
     Renin.instance = this;
-    this.nodes = options.nodes;
+    this.root = options.root;
 
     const body = document.getElementsByTagName("body")[0];
     body.appendChild(this.renderer.domElement);
@@ -126,6 +148,29 @@ export class Renin {
     this.audioBar.resize(width, height);
   }
 
+  /* for hmr */
+  register(newNode: ReninNode) {
+    function recurse(node: ReninNode): ReninNode | null {
+      if ("children" in node && node.children) {
+        for (const [id, child] of Object.entries(node.children)) {
+          const updated = recurse(child);
+          if (updated) {
+            node.children[id] = updated;
+          }
+        }
+      }
+      if (newNode.constructor.name === node.constructor.name) {
+        newNode.children = node.children;
+        return newNode;
+      }
+      return null;
+    }
+    const updated = recurse(this.root);
+    if (updated) {
+      this.root = updated;
+    }
+  }
+
   loop = () => {
     requestAnimationFrame(this.loop);
     this.oldTime = this.time;
@@ -143,22 +188,15 @@ export class Renin {
   update() {
     const frame = (this.music.audioElement.currentTime * 60) | 0;
     this.sync.updateBeatBean(frame);
-    for (const item of Object.values(this.nodes)) {
-      item.instance.update?.();
-    }
+    this.root.update?.();
   }
 
   render() {
     const frame = (this.music.audioElement.currentTime * 60) | 0;
-    for (const item of Object.values(this.nodes)) {
-      item.instance.render?.(frame, this.renderer, this);
-    }
-    if (this.nodes.spinningcube) {
-      //@ts-expect-error
-      const texture = this.nodes.spinningcube.instance.renderTarget.texture;
-      this.screen.material.map = texture;
-      this.screen.material.needsUpdate = true;
-    }
+    this.renderer.setRenderTarget(this.screenRenderTarget);
+    this.root._render(frame, this.renderer, this);
+    this.screen.material.map = this.screenRenderTarget.texture;
+    this.screen.material.needsUpdate = true;
 
     this.audioBar.render();
     this.renderer.setRenderTarget(null);
