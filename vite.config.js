@@ -6,10 +6,10 @@ function reninPlugin() {
   return {
     name: "renin-plugin",
     transform(src, filepath) {
-      if (filepath.endsWith(".ts")) {
+      if (filepath.endsWith(".ts") && filepath.indexOf("/src/renin/") === -1) {
         const fastNDirtyNodeClassNameParser = /export class ([^ ]+)/;
         const match = fastNDirtyNodeClassNameParser.exec(src);
-        if (match && match[1] !== "Renin") {
+        if (match) {
           src = 'import {Renin} from "/src/renin/renin"\n' + src;
           src += `
 if (import.meta.hot) {
