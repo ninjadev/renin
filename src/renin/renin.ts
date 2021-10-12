@@ -1,6 +1,7 @@
 import {
   BoxGeometry,
   CanvasTexture,
+  Color,
   Mesh,
   MeshBasicMaterial,
   OrthographicCamera,
@@ -14,7 +15,7 @@ import defaultVert from "./default.vert.glsl";
 
 export const defaultVertexShader = defaultVert;
 
-export function children(spec: any) {
+export function children<T>(spec: any): T {
   const store: any = {};
   return new Proxy(spec, {
     set: (target, prop, value) => {
@@ -33,6 +34,8 @@ export function children(spec: any) {
 }
 
 export class ReninNode {
+  startFrame: number = 0;
+  endFrame: number = -1;
   children?: { [key: string]: ReninNode };
   id: string;
   update(): void {}
@@ -42,8 +45,28 @@ export class ReninNode {
     this.id = this.constructor.name + "-" + ((1000000 * Math.random()) | 0);
     console.log("new", this.id);
   }
+  public _update(frame: number) {
+    if (
+      frame < this.startFrame ||
+      (frame >= this.endFrame && this.endFrame !== -1)
+    ) {
+      return;
+    }
+    if ("children" in this) {
+      for (const child of Object.values(this.children || {})) {
+        child._update(frame);
+      }
+    }
+    this.update?.(frame);
+  }
 
   public _render(frame: number, renderer: WebGLRenderer, renin: Renin) {
+    if (
+      frame < this.startFrame ||
+      (frame >= this.endFrame && this.endFrame !== -1)
+    ) {
+      return;
+    }
     if ("children" in this) {
       for (const child of Object.values(this.children || {})) {
         child._render(frame, renderer, renin);
@@ -187,8 +210,8 @@ export class Renin {
 
   update() {
     const frame = (this.music.audioElement.currentTime * 60) | 0;
-    this.sync.updateBeatBean(frame);
-    this.root.update?.();
+    this.sync.update(frame);
+    this.root._update(frame);
   }
 
   render() {
@@ -197,8 +220,9 @@ export class Renin {
     this.root._render(frame, this.renderer, this);
     this.screen.material.map = this.screenRenderTarget.texture;
     this.screen.material.needsUpdate = true;
+    this.scene.background = new Color(0x222222);
 
-    this.audioBar.render();
+    this.audioBar.render(this);
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.scene, this.camera);
   }

@@ -16,6 +16,7 @@ import { Renin, ReninNode, defaultVertexShader } from "./renin/renin";
 import plasma from "./plasma.glsl";
 
 export class SpinningCube extends ReninNode {
+  startFrame = 1234;
   scene = new Scene();
   camera = new PerspectiveCamera();
   renderTarget = new WebGLRenderTarget(640, 360);

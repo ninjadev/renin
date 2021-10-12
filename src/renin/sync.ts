@@ -28,7 +28,7 @@ export class Sync {
     return (step * this.framesPerSubdivision - 0.5) | 0;
   }
 
-  updateBeatBean(frame: number) {
+  update(frame: number) {
     this.beat = false;
     const n = ((frame + 1.5) / this.framesPerSubdivision) | 0;
     const m = ((frame + 0.5) / this.framesPerSubdivision) | 0;
