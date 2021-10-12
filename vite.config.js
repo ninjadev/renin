@@ -1,4 +1,6 @@
 import { defineConfig } from "vite";
+import vitePluginString from "vite-plugin-string";
+import Inspect from "vite-plugin-inspect";
 
 function reninPlugin() {
   return {
@@ -7,11 +9,12 @@ function reninPlugin() {
       if (filepath.endsWith(".ts")) {
         const fastNDirtyNodeClassNameParser = /export class ([^ ]+)/;
         const match = fastNDirtyNodeClassNameParser.exec(src);
-        if (match) {
+        if (match && match[1] !== "Renin") {
+          src = 'import {Renin} from "/src/renin/renin"\n' + src;
           src += `
 if (import.meta.hot) {
   import.meta.hot.accept((module) => {
-    renin.register(new module.${match[1]}());
+    Renin.instance.register(new module.${match[1]}());
   });
 }
         `;
@@ -25,5 +28,11 @@ if (import.meta.hot) {
 }
 
 export default defineConfig({
-  plugins: [reninPlugin()],
+  plugins: [
+    Inspect(),
+    reninPlugin(),
+    vitePluginString({
+      include: ["**/*.vs", "**/*.fs", "**/*.vert", "**/*.frag", "**/*.glsl"],
+    }),
+  ],
 });
