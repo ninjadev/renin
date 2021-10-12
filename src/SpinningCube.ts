@@ -48,9 +48,10 @@ export class SpinningCube implements ReninNode {
     this.camera.updateProjectionMatrix();
   }
 
-  public render(renderer: WebGLRenderer, renin: Renin) {
+  public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.cube.rotation.x = renin.music.audioElement.currentTime;
     this.cube.rotation.y = renin.music.audioElement.currentTime * 1.37;
+    this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
     this.cube.material.uniforms.time.value =
       renin.music.audioElement.currentTime;

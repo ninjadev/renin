@@ -9,13 +9,14 @@ import {
   WebGLRenderTarget,
 } from "three";
 import { AudioBar, Music } from "./AudioBar";
+import { Sync } from "./sync";
 import defaultVert from "./default.vert.glsl";
 
 export const defaultVertexShader = defaultVert;
 
 export interface ReninNode {
   update?: () => void;
-  render?: (renderer: WebGLRenderer, renin: Renin) => void;
+  render?: (frame: number, renderer: WebGLRenderer, renin: Renin) => void;
 }
 
 export interface Options {
@@ -41,6 +42,11 @@ export class Renin {
   audioBar = new AudioBar();
   music = new Music();
   nodes: Options["nodes"] = {};
+  sync: Sync;
+  frame = 0;
+  oldTime: number = 0;
+  time: number = 0;
+  dt: number = 0;
 
   register(node: ReninNode) {
     for (const [id, item] of Object.entries(this.nodes)) {
@@ -74,6 +80,7 @@ export class Renin {
     this.scene.add(this.camera);
     this.screen.scale.x = 640;
     this.screen.scale.y = 360;
+    this.sync = new Sync(options.music);
 
     this.scene.add(this.audioBar.obj);
 
@@ -121,19 +128,30 @@ export class Renin {
 
   loop = () => {
     requestAnimationFrame(this.loop);
-    this.update();
+    this.oldTime = this.time;
+    this.time = this.music.audioElement.currentTime;
+    this.dt += this.time - this.oldTime;
+    const frameLength = 1000 / 60;
+    while (this.dt > frameLength) {
+      this.dt -= frameLength;
+      this.update();
+      this.frame++;
+    }
     this.render();
   };
 
   update() {
+    const frame = (this.music.audioElement.currentTime * 60) | 0;
+    this.sync.updateBeatBean(frame);
     for (const item of Object.values(this.nodes)) {
       item.instance.update?.();
     }
   }
 
   render() {
+    const frame = (this.music.audioElement.currentTime * 60) | 0;
     for (const item of Object.values(this.nodes)) {
-      item.instance.render?.(this.renderer, this);
+      item.instance.render?.(frame, this.renderer, this);
     }
     if (this.nodes.spinningcube) {
       //@ts-expect-error
