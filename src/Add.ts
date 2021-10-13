@@ -27,7 +27,10 @@ export class Add extends ReninNode {
     })
   );
 
-  children = children({
+  children = children<{
+    spinningcube: SpinningCube;
+    jumpingbox: JumpingBox;
+  }>({
     spinningcube: SpinningCube,
     jumpingbox: JumpingBox,
   });
@@ -39,7 +42,7 @@ export class Add extends ReninNode {
     this.camera.position.z = 10;
   }
 
-  public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
+  public render(_frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.screen.material.uniforms.time.value =
       renin.music.audioElement.currentTime;
     this.screen.material.uniforms.tA.value =
