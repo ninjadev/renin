@@ -6,12 +6,14 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   Scene,
+  Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
 } from "three";
 import { AudioBar, Music } from "./AudioBar";
 import { Sync } from "./sync";
 import defaultVert from "./default.vert.glsl";
+import { lerp } from "../interpolations";
 
 export const defaultVertexShader = defaultVert;
 
@@ -38,7 +40,7 @@ export class ReninNode {
   endFrame: number = -1;
   children?: { [key: string]: ReninNode };
   id: string;
-  update(): void {}
+  update(frame: number): void {}
   render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
 
   constructor() {
@@ -109,6 +111,11 @@ export class Renin {
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
   screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360);
+  isFullscreen: boolean = false;
+  screenTargetScale = new Vector3(640, 360, 1);
+  uiOldTime: number = Date.now() / 1000;
+  uiTime: number = Date.now() / 1000;
+  uiDt: number = 0;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -145,6 +152,11 @@ export class Renin {
     });
 
     document.addEventListener("keydown", (e) => {
+      console.log(e.key);
+      if (e.key === "Enter") {
+        this.isFullscreen = !this.isFullscreen;
+        this.resize(window.innerWidth, window.innerHeight);
+      }
       if (e.key === " ") {
         if (this.music.isPlaying) {
           this.music.isPlaying = false;
@@ -169,6 +181,14 @@ export class Renin {
     this.camera.bottom = -height / 2;
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
+
+    if (this.isFullscreen) {
+      this.screenRenderTarget.setSize(width, height);
+      this.screenTargetScale.set(width, (width / 16) * 9, 1);
+    } else {
+      this.screenRenderTarget.setSize(640, 360);
+      this.screenTargetScale.set(640, 360, 1);
+    }
   }
 
   /* for hmr */
@@ -199,11 +219,18 @@ export class Renin {
     this.oldTime = this.time;
     this.time = this.music.audioElement.currentTime;
     this.dt += this.time - this.oldTime;
-    const frameLength = 1000 / 60;
-    while (this.dt > frameLength) {
+    this.uiOldTime = this.uiTime;
+    this.uiTime = Date.now() / 1000;
+    this.uiDt += this.uiTime - this.uiOldTime;
+    const frameLength = 1 / 60;
+    while (this.dt >= frameLength) {
       this.dt -= frameLength;
       this.update();
       this.frame++;
+    }
+    while (this.uiDt >= frameLength) {
+      this.uiDt -= frameLength;
+      this.uiUpdate();
     }
     this.render();
   };
@@ -212,6 +239,19 @@ export class Renin {
     const frame = (this.music.audioElement.currentTime * 60) | 0;
     this.sync.update(frame);
     this.root._update(frame);
+  }
+
+  uiUpdate() {
+    this.screen.scale.x = lerp(
+      this.screen.scale.x,
+      this.screenTargetScale.x,
+      0.5
+    );
+    this.screen.scale.y = lerp(
+      this.screen.scale.y,
+      this.screenTargetScale.y,
+      0.5
+    );
   }
 
   render() {
