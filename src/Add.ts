@@ -12,6 +12,7 @@ import { SpinningCube } from "./SpinningCube";
 import { JumpingBox } from "./JumpingBox";
 
 export class Add extends ReninNode {
+  endFrame = 4000;
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   screen = new Mesh(

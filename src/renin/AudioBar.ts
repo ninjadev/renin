@@ -71,12 +71,22 @@ export class AudioBar {
     }
     this.obj.add(this.nodeContainer);
     let deepestDepth = 0;
-    const recurse = (node: ReninNode, depth = 0) => {
+    const recurse = (
+      node: ReninNode,
+      depth = 0,
+      startFrameBound: number,
+      endFrameBound: number
+    ) => {
+      const startFrame = Math.max(node.startFrame, startFrameBound);
+      const endFrame = Math.min(
+        node.endFrame === -1 ? endFrameBound : node.endFrame,
+        endFrameBound
+      );
       deepestDepth = Math.max(depth, deepestDepth);
       if ("children" in node && node.children) {
         let i = 0;
         for (const child of Object.values(node.children)) {
-          recurse(child, depth + ++i);
+          recurse(child, depth + ++i, startFrame, endFrame);
         }
       }
       const box = new Mesh(
@@ -84,15 +94,11 @@ export class AudioBar {
         new MeshBasicMaterial({ map: getNodeTexture(node.constructor.name) })
       );
       box.scale.y = 24;
-      const endFrame =
-        node.endFrame === -1
-          ? (renin.music.audioElement.duration * 60) | 0
-          : node.endFrame;
       const size =
-        (endFrame - node.startFrame) / 60 / renin.music.audioElement.duration;
+        (endFrame - startFrame) / 60 / renin.music.audioElement.duration;
       box.scale.x = size * (this.width - 32);
       box.position.x =
-        (node.startFrame / 60 / renin.music.audioElement.duration) *
+        (startFrame / 60 / renin.music.audioElement.duration) *
           (this.width - 32) -
         (this.width - 32) / 2 +
         box.scale.x / 2;
@@ -100,7 +106,14 @@ export class AudioBar {
       box.position.y = (24 + 8) * depth;
       this.nodeContainer.add(box);
     };
-    recurse(renin.root);
+    recurse(
+      renin.root,
+      0,
+      renin.root.startFrame,
+      renin.root.endFrame === -1
+        ? renin.music.audioElement.duration * 60
+        : renin.root.endFrame
+    );
     this.audioTrack.scale.y = 64 + deepestDepth * 24;
   }
 
