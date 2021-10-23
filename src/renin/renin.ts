@@ -366,6 +366,14 @@ export class Renin {
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
     const frameLength = 1 / 60;
+    if (this.dt >= 10 * frameLength) {
+      /* give up and skip! */
+      this.dt %= frameLength;
+    }
+    if (this.uiDt >= 10 * frameLength) {
+      /* give up and skip! */
+      this.uiDt %= frameLength;
+    }
     while (this.dt >= frameLength) {
       this.dt -= frameLength;
       this.update(this.frame);
