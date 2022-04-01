@@ -349,7 +349,7 @@ export class Renin {
     this.screen.material.needsUpdate = true;
     this.scene.background = new Color(0x222222);
 
-    this.audioBar.render(this);
+    this.audioBar.render(this, this.cuePoints);
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.scene, this.camera);
   }
