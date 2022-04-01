@@ -184,6 +184,25 @@ export class Renin {
           this.music.audioElement.play();
         }
       }
+      if (e.key === "j") {
+        const period = this.sync.music.subdivision * 4;
+        const step = this.sync.stepForFrame(this.frame);
+        let newStep = ((step / period) | 0) * period;
+        if (newStep === step) {
+          newStep -= period;
+        }
+        this.jumpToFrame(this.sync.frameForStep(newStep));
+      }
+      if (e.key === "k") {
+        const period = this.sync.music.subdivision * 4;
+        const step = this.sync.stepForFrame(this.frame);
+        let newStep = ((step / period) | 0) * period;
+        newStep += period;
+        if (newStep === step) {
+          newStep += period;
+        }
+        this.jumpToFrame(this.sync.frameForStep(newStep));
+      }
     });
   }
 
@@ -253,6 +272,7 @@ export class Renin {
   };
 
   jumpToFrame(frame: number) {
+    this.frame = frame;
     this.music.audioElement.currentTime = frame / 60;
     this.update();
     this.uiUpdate();

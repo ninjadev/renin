@@ -4,12 +4,14 @@ export class Sync {
   step = 0;
   beat = false;
   readonly framesPerSubdivision: number;
+  music: { src: string; bpm: number; subdivision: number };
 
   constructor(music: Options["music"]) {
     const stepsPerMinute = music.bpm * music.subdivision;
     const stepsPerSecond = stepsPerMinute / 60;
     const framesPerSecond = 60;
     this.framesPerSubdivision = framesPerSecond / stepsPerSecond;
+    this.music = music;
   }
 
   flash(frame: number, stepStride: number, stepOffset: number = 0) {
