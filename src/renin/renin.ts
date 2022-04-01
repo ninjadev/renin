@@ -100,6 +100,7 @@ export class Renin {
   oldTime: number = 0;
   time: number = 0;
   dt: number = 0;
+  cuePoints: number[] = [];
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
@@ -182,6 +183,15 @@ export class Renin {
           this.music.isPlaying = true;
           this.music.audioContext.resume();
           this.music.audioElement.play();
+        }
+      }
+      if (e.key === "g") {
+        const step = this.sync.stepForFrame(this.frame);
+        const quantizedStep = step - (step % this.sync.music.subdivision);
+        if (this.cuePoints.length < 2) {
+          this.cuePoints.push(this.sync.frameForStep(quantizedStep));
+        } else {
+          this.cuePoints = [];
         }
       }
       if (e.key === "J") {
@@ -291,6 +301,10 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
+
+      if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
+        this.jumpToFrame(this.cuePoints[0]);
+      }
     }
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
