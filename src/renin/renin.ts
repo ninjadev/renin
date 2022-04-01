@@ -128,6 +128,23 @@ export class Renin {
     this.renderer.domElement.style.left = "0px";
     this.renderer.domElement.style.right = "0px";
     this.renderer.domElement.style.bottom = "0px";
+
+    this.renderer.domElement.addEventListener("click", (e) => {
+      const screenHeight = window.innerHeight;
+      const padding = 16;
+      const audioBarHeight = 64;
+      const screenWidth = window.innerWidth;
+
+      const audioBarWidth = screenWidth - padding * 2;
+      const x = (e.clientX - padding) / audioBarWidth;
+      if (e.clientY > screenHeight - audioBarHeight - padding) {
+        if (x >= 0 && x <= 1) {
+          /* we click the bar! */
+          this.jumpToFrame((x * this.music.audioElement.duration * 60) | 0);
+        }
+      }
+    });
+
     this.scene.add(this.screen);
     this.scene.add(this.camera);
     this.screen.scale.x = 640;
@@ -234,6 +251,13 @@ export class Renin {
     }
     this.render();
   };
+
+  jumpToFrame(frame: number) {
+    this.music.audioElement.currentTime = frame / 60;
+    this.update();
+    this.uiUpdate();
+    this.render();
+  }
 
   update() {
     const frame = (this.music.audioElement.currentTime * 60) | 0;
