@@ -289,7 +289,7 @@ export class Renin {
     const frameLength = 1 / 60;
     while (this.dt >= frameLength) {
       this.dt -= frameLength;
-      this.update();
+      this.update(this.frame);
       this.frame++;
     }
     while (this.uiDt >= frameLength) {
@@ -302,13 +302,14 @@ export class Renin {
   jumpToFrame(frame: number) {
     this.frame = frame;
     this.music.audioElement.currentTime = frame / 60;
-    this.update();
+    this.time = this.music.audioElement.currentTime;
+    this.dt = 0;
+    this.update(frame);
     this.uiUpdate();
     this.render();
   }
 
-  update() {
-    const frame = (this.music.audioElement.currentTime * 60) | 0;
+  update(frame: number) {
     this.sync.update(frame);
     this.root._update(frame);
   }
