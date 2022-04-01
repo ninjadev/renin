@@ -184,7 +184,13 @@ export class Renin {
           this.music.audioElement.play();
         }
       }
-      if (e.key === "j") {
+      if (e.key === "J") {
+        this.jumpToFrame(this.frame - 1);
+      }
+      if (e.key === "K") {
+        this.jumpToFrame(this.frame + 1);
+      }
+      if (e.key === "h") {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -193,7 +199,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "k") {
+      if (e.key === "l") {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -202,6 +208,28 @@ export class Renin {
           newStep += period;
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
+      }
+      if (e.key === "j") {
+        const period = this.sync.music.subdivision * 1;
+        const step = this.sync.stepForFrame(this.frame);
+        let newStep = ((step / period) | 0) * period;
+        if (newStep === step) {
+          newStep -= period;
+        }
+        this.jumpToFrame(this.sync.frameForStep(newStep));
+      }
+      if (e.key === "k") {
+        const period = this.sync.music.subdivision * 1;
+        const step = this.sync.stepForFrame(this.frame);
+        let newStep = ((step / period) | 0) * period;
+        newStep += period;
+        if (newStep === step) {
+          newStep += period;
+        }
+        this.jumpToFrame(this.sync.frameForStep(newStep));
+      }
+      if (e.key === "H") {
+        this.jumpToFrame(0);
       }
     });
   }
