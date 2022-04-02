@@ -8,6 +8,7 @@ import {
   Vector2,
   Texture,
 } from "three";
+import { colors } from "./colors";
 import { Options, Renin, ReninNode } from "./renin";
 
 export const barHeight = 48;
@@ -38,7 +39,7 @@ const getNodeTexture = (name: string) => {
     if (!ctx) {
       return fallbackTexture;
     }
-    ctx.fillStyle = "darkblue";
+    ctx.fillStyle = colors.slate._500;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.textBaseline = "middle";
@@ -163,13 +164,13 @@ export class AudioBar {
     if (!ctx) {
       return;
     }
-    ctx.fillStyle = "black";
+    ctx.fillStyle = colors.slate._800;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     const bucketWidth = audioData.length / canvas.width;
     ctx.save();
     ctx.translate(0, canvas.height / 2);
     ctx.scale(1, canvas.height);
-    ctx.fillStyle = "red";
+    ctx.fillStyle = colors.slate._500;
     for (let i = 0; i < canvas.width; i++) {
       let min = 0;
       let max = 0;
@@ -181,11 +182,10 @@ export class AudioBar {
       ctx.fillRect(i, min, 1, max - min);
     }
     const beats =
-      ((options.bpm / 60) * audioData.length) /
-      music.audioContext.sampleRate /
-      4;
-    ctx.fillStyle = "white";
+      ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+    ctx.fillStyle = colors.slate._300;
     for (let i = 0; i < beats; i++) {
+      ctx.fillStyle = i % 4 === 0 ? colors.slate._300 : colors.slate._500;
       const x = ((canvas.width * i) / beats) | 0;
       ctx.fillRect(x - 1, -1, 3, 2);
     }
@@ -203,7 +203,7 @@ export class AudioBar {
     this.audioTrack = new Mesh(
       new BoxGeometry(),
       new MeshBasicMaterial({
-        color: "orange",
+        color: colors.orange._500,
       })
     );
     this.audioTrack.scale.set(3, barHeight, 1);
@@ -211,13 +211,13 @@ export class AudioBar {
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: "lime",
+          color: colors.green._500,
         })
       ),
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: "lime",
+          color: colors.green._300,
         })
       ),
     ];
