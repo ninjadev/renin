@@ -14,6 +14,7 @@ import { AudioBar, Music } from "./AudioBar";
 import { Sync } from "./sync";
 import defaultVert from "./default.vert.glsl";
 import { lerp } from "../interpolations";
+import { colors } from "./colors";
 
 export const defaultVertexShader = defaultVert;
 
@@ -347,7 +348,7 @@ export class Renin {
     this.root._render(frame, this.renderer, this);
     this.screen.material.map = this.screenRenderTarget.texture;
     this.screen.material.needsUpdate = true;
-    this.scene.background = new Color(0x222222);
+    this.scene.background = new Color(colors.gray._700);
 
     this.audioBar.render(this, this.cuePoints);
     this.renderer.setRenderTarget(null);
