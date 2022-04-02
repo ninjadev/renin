@@ -114,6 +114,12 @@ export class AudioBar {
         box.scale.x / 2;
       box.position.z = 2;
       box.position.y = (24 + 8) * depth;
+      const windowSizeIndependantMagicScaleNumber =
+        (window.innerWidth / 1024) * 2.5;
+      box.material.map!.repeat.set(
+        windowSizeIndependantMagicScaleNumber * size,
+        1
+      );
       this.nodeContainer.add(box);
     };
     recurse(
