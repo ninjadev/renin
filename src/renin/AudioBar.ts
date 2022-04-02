@@ -55,10 +55,19 @@ export class AudioBar {
   music: Music | null = null;
   width: number = 1;
   nodeContainer = new Object3D();
-  render(renin: Renin) {
+  cuePoints: Mesh[];
+  render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
     }
+
+    for (const [i, mesh] of this.cuePoints.entries()) {
+      mesh.visible = cuePoints[i] !== undefined;
+      const progress = cuePoints[i] / 60 / this.music.audioElement.duration;
+      mesh.position.z = 1.5;
+      mesh.position.x = 16 + progress * (this.width - 32) - this.width / 2 - 1;
+    }
+
     const audioProgress =
       this.music.audioElement.currentTime / this.music.audioElement.duration;
     this.audioTrack.position.z = 2;
@@ -115,6 +124,8 @@ export class AudioBar {
         : renin.root.endFrame
     );
     this.audioTrack.scale.y = 64 + deepestDepth * 24;
+    this.cuePoints[0].scale.y = 64 + deepestDepth * 24;
+    this.cuePoints[1].scale.y = 64 + deepestDepth * 24;
   }
 
   resize(width: number, height: number) {
@@ -122,6 +133,8 @@ export class AudioBar {
     this.audioBar.scale.x = width - 32;
     this.audioBar.position.y = -height / 2 + barHeight / 2 + 16;
     this.audioTrack.position.y = -height / 2 + barHeight / 2 + 16;
+    this.cuePoints[0].position.y = -height / 2 + barHeight / 2 + 16;
+    this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
     this.nodeContainer.position.y = -height / 2 + barHeight + 28 + 8;
   }
   async setMusic(
@@ -194,6 +207,25 @@ export class AudioBar {
       })
     );
     this.audioTrack.scale.set(3, barHeight, 1);
+    this.cuePoints = [
+      new Mesh(
+        new BoxGeometry(),
+        new MeshBasicMaterial({
+          color: "lime",
+        })
+      ),
+      new Mesh(
+        new BoxGeometry(),
+        new MeshBasicMaterial({
+          color: "lime",
+        })
+      ),
+    ];
+    this.audioTrack.scale.set(3, barHeight, 1);
+    this.cuePoints[0].scale.set(3, barHeight, 1);
+    this.cuePoints[1].scale.set(3, barHeight, 1);
     this.obj.add(this.audioTrack);
+    this.obj.add(this.cuePoints[0]);
+    this.obj.add(this.cuePoints[1]);
   }
 }
