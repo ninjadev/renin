@@ -9,7 +9,7 @@ import {
   Texture,
 } from "three";
 import { colors } from "./colors";
-import { Options, Renin, ReninNode } from "./renin";
+import { getWindowWidth, Options, Renin, ReninNode } from "./renin";
 
 export const barHeight = 48;
 
@@ -115,7 +115,7 @@ export class AudioBar {
       box.position.z = 2;
       box.position.y = (24 + 8) * depth;
       const windowSizeIndependantMagicScaleNumber =
-        (window.innerWidth / 1024) * 2.5;
+        (getWindowWidth() / 1024) * 2.5;
       box.material.map!.repeat.set(
         windowSizeIndependantMagicScaleNumber * size,
         1
