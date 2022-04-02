@@ -16,6 +16,9 @@ import defaultVert from "./default.vert.glsl";
 import { lerp } from "../interpolations";
 import { colors } from "./colors";
 
+export const getWindowWidth = () => window.innerWidth;
+export const getWindowHeight = () => window.innerHeight;
+
 export const defaultVertexShader = defaultVert;
 
 export function children<T>(spec: any): T {
@@ -132,10 +135,10 @@ export class Renin {
     this.renderer.domElement.style.bottom = "0px";
 
     this.renderer.domElement.addEventListener("click", (e) => {
-      const screenHeight = window.innerHeight;
+      const screenHeight = getWindowHeight();
       const padding = 16;
       const audioBarHeight = 64;
-      const screenWidth = window.innerWidth;
+      const screenWidth = getWindowWidth();
 
       const audioBarWidth = screenWidth - padding * 2;
       const x = (e.clientX - padding) / audioBarWidth;
@@ -164,17 +167,17 @@ export class Renin {
     })();
 
     this.camera.position.z = 10;
-    this.resize(window.innerWidth, window.innerHeight);
+    this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener("resize", () => {
-      this.resize(window.innerWidth, window.innerHeight);
+      this.resize(getWindowWidth(), getWindowHeight());
     });
 
     document.addEventListener("keydown", (e) => {
       console.log(e.key);
       if (e.key === "Enter") {
         this.isFullscreen = !this.isFullscreen;
-        this.resize(window.innerWidth, window.innerHeight);
+        this.resize(getWindowWidth(), getWindowHeight());
       }
       if (e.key === " ") {
         if (this.music.isPlaying) {
@@ -249,6 +252,7 @@ export class Renin {
     this.width = width;
     this.height = height;
     this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.camera.left = -width / 2;
 
     this.camera.right = width / 2;
