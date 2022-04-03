@@ -38,6 +38,7 @@ export class AudioBar {
   width: number = 1;
   nodeContainer = new Object3D();
   cuePoints: Mesh[];
+  renin: Renin;
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
@@ -81,6 +82,17 @@ export class AudioBar {
       const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
       box.material.map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
       this.nodeContainer.add(box);
+
+      if ((node as any).renderTarget || (node as any).screen) {
+        const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
+        const preview = new Mesh(geometry, new MeshBasicMaterial({ map: renderTarget.texture }));
+        preview.position.z = 5;
+        preview.position.x = box.position.x + box.scale.x / 2 - 16;
+        preview.position.y = box.position.y;
+        preview.scale.x = 32;
+        preview.scale.y = 24;
+        this.nodeContainer.add(preview);
+      }
     };
     recurse(
       renin.root,
@@ -143,7 +155,8 @@ export class AudioBar {
   audioBar: Mesh<BoxGeometry, MeshBasicMaterial>;
   audioTrack: Mesh<BoxGeometry, MeshBasicMaterial>;
   obj = new Object3D();
-  constructor() {
+  constructor(renin: Renin) {
+    this.renin = renin;
     this.audioBar = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
     this.audioBar.scale.y = barHeight;
     this.obj.add(this.audioBar);

@@ -36,7 +36,7 @@ export class Renin {
   static instance: Renin;
   width: number = 1;
   height: number = 1;
-  audioBar = new AudioBar();
+  audioBar: AudioBar;
   music = new Music();
   sync: Sync;
   frame = 0;
@@ -61,6 +61,8 @@ export class Renin {
   constructor(options: Options) {
     Renin.instance = this;
     this.root = options.root;
+
+    this.audioBar = new AudioBar(this);
 
     const body = document.getElementsByTagName('body')[0];
     body.appendChild(this.renderer.domElement);
