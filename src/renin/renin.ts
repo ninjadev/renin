@@ -9,7 +9,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { AudioBar, Music } from './AudioBar';
+import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
 import { lerp } from '../interpolations';
@@ -17,6 +17,7 @@ import { colors } from './colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
 import { registerErrorOverlay } from './error';
+import { Music } from './music';
 
 export const defaultVertexShader = defaultVert;
 
@@ -70,6 +71,7 @@ export class Renin {
     this.renderer.domElement.style.bottom = '0px';
 
     this.renderer.domElement.addEventListener('click', (e) => {
+      this.music.initAudioContext();
       const screenHeight = getWindowHeight();
       const padding = 16;
       const audioBarHeight = 64;
@@ -80,7 +82,7 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          this.jumpToFrame((x * this.music.audioElement.duration * 60) | 0);
+          this.jumpToFrame((x * this.music.getDuration() * 60) | 0);
         }
       }
     });
@@ -95,10 +97,10 @@ export class Renin {
 
     (async () => {
       const response = await fetch(options.music.src);
-      const audio = this.music.audioElement;
-      const blob = await response.blob();
-      audio.src = window.URL.createObjectURL(blob);
-      this.audioBar.setMusic(this, this.music, blob, options.music);
+      const data = await response.arrayBuffer();
+      const buffer = await (await this.music.audioContextPromise).decodeAudioData(data);
+      this.music.setBuffer(buffer);
+      this.audioBar.setMusic(this.music, buffer, options.music);
     })();
 
     this.camera.position.z = 10;
@@ -109,19 +111,17 @@ export class Renin {
     });
 
     document.addEventListener('keydown', (e) => {
+      this.music.initAudioContext();
       console.log(e.key);
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
       }
       if (e.key === ' ') {
-        if (this.music.isPlaying) {
-          this.music.isPlaying = false;
-          this.music.audioElement.pause();
+        if (!this.music.paused) {
+          this.music.pause();
         } else {
-          this.music.isPlaying = true;
-          this.music.audioContext.resume();
-          this.music.audioElement.play();
+          this.music.play();
         }
       }
       if (e.key === 'g') {
@@ -180,6 +180,18 @@ export class Renin {
       if (e.key === 'H') {
         this.jumpToFrame(0);
       }
+
+      const playbackRates: Record<string, number> = {
+        '6': 0.25,
+        '7': 0.5,
+        '8': 2,
+        '9': 4,
+        '0': 1,
+      };
+
+      if (e.key in playbackRates) {
+        this.music.setPlaybackRate(playbackRates[e.key]);
+      }
     });
   }
 
@@ -231,7 +243,7 @@ export class Renin {
   loop = () => {
     requestAnimationFrame(this.loop);
     this.oldTime = this.time;
-    this.time = this.music.audioElement.currentTime;
+    this.time = this.music.getCurrentTime();
     this.dt += this.time - this.oldTime;
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
@@ -255,8 +267,9 @@ export class Renin {
 
   jumpToFrame(frame: number) {
     this.frame = frame;
-    this.music.audioElement.currentTime = frame / 60;
-    this.time = this.music.audioElement.currentTime;
+    this.music.setCurrentTime(frame / 60);
+    this.time = frame / 60;
+    this.oldTime = this.time;
     this.dt = 0;
     this.update(frame);
     this.uiUpdate();
@@ -274,7 +287,7 @@ export class Renin {
   }
 
   render() {
-    const frame = (this.music.audioElement.currentTime * 60) | 0;
+    const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(frame, this.renderer, this);
     this.screen.material.map = this.screenRenderTarget.texture;

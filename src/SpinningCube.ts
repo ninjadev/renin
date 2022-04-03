@@ -46,11 +46,11 @@ export class SpinningCube extends ReninNode {
   }
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
-    this.cube.rotation.x = renin.music.audioElement.currentTime * 1;
-    this.cube.rotation.y = renin.music.audioElement.currentTime * 1.37;
+    this.cube.rotation.x = frame * 0.1;
+    this.cube.rotation.y = frame * 0.2;
     this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
-    this.cube.material.uniforms.time.value = renin.music.audioElement.currentTime;
+    this.cube.material.uniforms.time.value = frame / 60;
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }

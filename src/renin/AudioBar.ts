@@ -1,21 +1,11 @@
-import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Raycaster, Vector2, Texture } from 'three';
+import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture } from 'three';
 import { colors } from './colors';
+import { Music } from './music';
 import { Options, Renin } from './renin';
 import { ReninNode } from './ReninNode';
 import { getWindowWidth } from './utils';
 
 export const barHeight = 48;
-
-export class Music {
-  audioContext = new AudioContext();
-  musicSource: MediaElementAudioSourceNode | null = null;
-  audioElement = new Audio();
-  isPlaying = false;
-  constructor() {
-    this.musicSource = this.audioContext.createMediaElementSource(this.audioElement);
-    this.musicSource.connect(this.audioContext.destination);
-  }
-}
 
 const fallbackTexture = new Texture();
 const store: { [key: string]: Texture } = {};
@@ -55,12 +45,12 @@ export class AudioBar {
 
     for (const [i, mesh] of this.cuePoints.entries()) {
       mesh.visible = cuePoints[i] !== undefined;
-      const progress = cuePoints[i] / 60 / this.music.audioElement.duration;
+      const progress = cuePoints[i] / 60 / this.music.getDuration();
       mesh.position.z = 1.5;
       mesh.position.x = 16 + progress * (this.width - 32) - this.width / 2 - 1;
     }
 
-    const audioProgress = this.music.audioElement.currentTime / this.music.audioElement.duration;
+    const audioProgress = this.music.getCurrentTime() / this.music.getDuration();
     this.audioTrack.position.z = 2;
     this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - 1;
 
@@ -82,12 +72,10 @@ export class AudioBar {
       }
       const box = new Mesh(geometry, new MeshBasicMaterial({ map: getNodeTexture(node.constructor.name) }));
       box.scale.y = 24;
-      const size = (endFrame - startFrame) / 60 / renin.music.audioElement.duration;
+      const size = (endFrame - startFrame) / 60 / renin.music.getDuration();
       box.scale.x = size * (this.width - 32);
       box.position.x =
-        (startFrame / 60 / renin.music.audioElement.duration) * (this.width - 32) -
-        (this.width - 32) / 2 +
-        box.scale.x / 2;
+        (startFrame / 60 / renin.music.getDuration()) * (this.width - 32) - (this.width - 32) / 2 + box.scale.x / 2;
       box.position.z = 2;
       box.position.y = (24 + 8) * depth;
       const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
@@ -98,7 +86,7 @@ export class AudioBar {
       renin.root,
       0,
       renin.root.startFrame,
-      renin.root.endFrame === -1 ? renin.music.audioElement.duration * 60 : renin.root.endFrame
+      renin.root.endFrame === -1 ? renin.music.getDuration() * 60 : renin.root.endFrame
     );
     this.audioTrack.scale.y = 64 + deepestDepth * 24;
     this.cuePoints[0].scale.y = 64 + deepestDepth * 24;
@@ -114,18 +102,9 @@ export class AudioBar {
     this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
     this.nodeContainer.position.y = -height / 2 + barHeight + 28 + 8;
   }
-  async setMusic(renin: Renin, music: Music, blob: Blob, options: Options['music']) {
-    renin.renderer.domElement.addEventListener('click', (e) => {
-      const raycaster = new Raycaster();
-      const point = new Vector2(e.clientX, e.clientY);
-      raycaster.setFromCamera(point, renin.camera);
-      const intersections = raycaster.intersectObjects([this.audioBar]);
-      if (intersections.length > 0) {
-        console.log(intersections[0]);
-      }
-    });
+  async setMusic(music: Music, buffer: AudioBuffer, options: Options['music']) {
     this.music = music;
-    const audioData = (await music.audioContext.decodeAudioData(await blob.arrayBuffer())).getChannelData(0);
+    const audioData = buffer.getChannelData(0);
     const canvas = document.createElement('canvas');
     canvas.width = 1024 * 4;
     canvas.height = 128;

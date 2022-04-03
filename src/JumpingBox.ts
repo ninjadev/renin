@@ -47,10 +47,10 @@ export class JumpingBox extends ReninNode {
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.cube.position.x = 2;
-    this.cube.position.y = Math.sin(renin.music.audioElement.currentTime * 1.37) * 2;
+    this.cube.position.y = Math.sin(frame * 0.1) * 2;
     this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
-    this.cube.material.uniforms.time.value = renin.music.audioElement.currentTime;
+    this.cube.material.uniforms.time.value = frame / 60;
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
