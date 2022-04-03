@@ -133,6 +133,7 @@ export class Renin {
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({ shadowSize: 16 });
+  framePanel = new UIBox({ shadowSize: 32 });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -143,6 +144,8 @@ export class Renin {
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
   thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
+  framePanelCanvas: HTMLCanvasElement;
+  framePanelTexture: CanvasTexture;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -176,9 +179,14 @@ export class Renin {
     });
 
     this.scene.add(this.screen.object3d);
+    this.scene.add(this.framePanel.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
+
+    this.framePanelCanvas = document.createElement('canvas');
+    this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
+    this.framePanel.setTexture(this.framePanelTexture, true);
 
     this.thirdsOverlay = new Mesh(
       new BoxGeometry(),
@@ -403,16 +411,48 @@ export class Renin {
       this.fullscreenAnimation.value
     );
     this.screen.object3d.position.z = 90;
+
+    if (this.fullscreenAnimation.value > 0.9999) {
+      return;
+    }
+
+    this.framePanel.object3d.scale.x = 128 + 32;
+    this.framePanel.object3d.scale.y = 48;
+    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
+    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
+    this.framePanel.object3d.position.z = 50;
+
+    const framePanelCtx = this.framePanelCanvas.getContext('2d');
+    if (framePanelCtx) {
+      const ctx = framePanelCtx;
+      const canvas = this.framePanelCanvas;
+      canvas.width = 128 + 32;
+      canvas.height = 48;
+      ctx.fillStyle = colors.slate._500;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '20px Barlow';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = colors.slate._100;
+      ctx.fillText('' + this.frame, canvas.width - 16, canvas.height / 2);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = colors.slate._300;
+      ctx.font = '100 20px Barlow';
+      ctx.fillText('Frame', 16, canvas.height / 2);
+    }
+    this.framePanelTexture.needsUpdate = true;
   }
 
   render() {
-    const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
-    this.root._render(frame, this.renderer, this);
+    this.root._render(this.frame, this.renderer, this);
     this.screen.setTexture(this.screenRenderTarget.texture, true);
     this.scene.background = new Color(colors.gray._700);
 
-    this.audioBar.render(this, this.cuePoints);
+    if (this.fullscreenAnimation.value < 0.9999) {
+      this.audioBar.render(this, this.cuePoints);
+    }
+
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.scene, this.camera);
   }
