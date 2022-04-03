@@ -133,7 +133,7 @@ export class Renin {
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({ shadowSize: 16 });
-  framePanel = new UIBox({ shadowSize: 32 });
+  framePanel = new UIBox({ shadowSize: 16 });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -420,8 +420,7 @@ export class Renin {
       return;
     }
 
-    this.framePanel.object3d.scale.x = 128 + 32;
-    this.framePanel.object3d.scale.y = 48;
+    this.framePanel.setSize(128 + 32, 48);
     this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
     this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
     this.framePanel.object3d.position.z = 50;
