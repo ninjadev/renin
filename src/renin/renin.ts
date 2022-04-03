@@ -1,13 +1,4 @@
-import {
-  BoxGeometry,
-  Color,
-  Mesh,
-  MeshBasicMaterial,
-  OrthographicCamera,
-  Scene,
-  WebGLRenderer,
-  WebGLRenderTarget,
-} from 'three';
+import { Color, OrthographicCamera, Scene, WebGLRenderer, WebGLRenderTarget } from 'three';
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
@@ -18,6 +9,7 @@ import { ReninNode } from './ReninNode';
 import { registerErrorOverlay } from './error';
 import { Music } from './music';
 import { UIAnimation } from './animation';
+import { UIBox } from './uibox';
 
 export const defaultVertexShader = defaultVert;
 
@@ -47,7 +39,7 @@ export class Renin {
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: 'white' }));
+  screen = new UIBox({ shadowSize: 16 });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -89,10 +81,10 @@ export class Renin {
       }
     });
 
-    this.scene.add(this.screen);
+    this.scene.add(this.screen.object3d);
     this.scene.add(this.camera);
-    this.screen.scale.x = 640;
-    this.screen.scale.y = 360;
+    this.screen.object3d.scale.x = 640;
+    this.screen.object3d.scale.y = 360;
     this.sync = new Sync(options.music);
 
     this.scene.add(this.audioBar.obj);
@@ -289,16 +281,18 @@ export class Renin {
 
   uiUpdate() {
     this.fullscreenAnimation.update(this.uiTime);
-    this.screen.scale.x = lerp(640, getWindowWidth(), this.fullscreenAnimation.value);
-    this.screen.scale.y = lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value);
-    this.screen.position.x = lerp(
-      getWindowWidth() / 2 - this.screen.scale.x / 2 - 16,
-      getWindowWidth() / 2 - this.screen.scale.x / 2,
+    this.screen.setSize(
+      lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
+      lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
+    );
+    this.screen.object3d.position.x = lerp(
+      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - 16,
+      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2,
       this.fullscreenAnimation.value
     );
-    this.screen.position.y = lerp(
-      getWindowHeight() / 2 - this.screen.scale.y / 2 - 16,
-      getWindowHeight() / 2 - this.screen.scale.y / 2,
+    this.screen.object3d.position.y = lerp(
+      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - 16,
+      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2,
       this.fullscreenAnimation.value
     );
   }
@@ -307,8 +301,7 @@ export class Renin {
     const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(frame, this.renderer, this);
-    this.screen.material.map = this.screenRenderTarget.texture;
-    this.screen.material.needsUpdate = true;
+    this.screen.setTexture(this.screenRenderTarget.texture, true);
     this.scene.background = new Color(colors.gray._700);
 
     this.audioBar.render(this, this.cuePoints);
