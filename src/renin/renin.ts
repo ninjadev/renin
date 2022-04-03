@@ -215,6 +215,8 @@ export class Renin {
       this.screenRenderTarget.setSize(640, 360);
       this.screenTargetScale.set(640, 360, 1);
     }
+
+    this.root._resize(width, height);
   }
 
   /* for hmr */

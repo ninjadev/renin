@@ -26,6 +26,9 @@ export class ReninNode {
    * typically be called after each update. */
   render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
 
+  /* Subclasses can implement this if they need to respond to resize events. */
+  resize(width: number, height: number): void {}
+
   constructor() {
     this.id = this.constructor.name + '-' + ((1000000 * Math.random()) | 0);
     console.log('new', this.id);
@@ -41,7 +44,7 @@ export class ReninNode {
         child._update(frame);
       }
     }
-    this.update?.(frame);
+    this.update(frame);
   }
 
   /* The actual render function. Subclasses don't need to override this,
@@ -56,7 +59,17 @@ export class ReninNode {
       }
     }
     const oldRenderTarget = renderer.getRenderTarget();
-    this.render?.(frame, renderer, renin);
+    this.render(frame, renderer, renin);
     renderer.setRenderTarget(oldRenderTarget);
+  }
+
+  /* The actual resize function. Subclasses don't need to override this. */
+  public _resize(width: number, height: number) {
+    if ('children' in this) {
+      for (const child of Object.values(this.children || {})) {
+        child._resize(width, height);
+      }
+    }
+    this.resize(width, height);
   }
 }
