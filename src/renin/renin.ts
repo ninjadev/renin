@@ -98,7 +98,7 @@ export class Renin {
       this.audioBar.setMusic(this.music, buffer, options.music);
     })();
 
-    this.camera.position.z = 10;
+    this.camera.position.z = 100;
     this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener('resize', () => {
