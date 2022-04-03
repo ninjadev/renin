@@ -211,6 +211,7 @@ export class Renin {
 
     document.addEventListener('keydown', (e) => {
       this.music.audioContext.resume();
+      const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
       if (e.key === 'o') {
         this.thirdsOverlay.visible = !this.thirdsOverlay.visible;
@@ -243,7 +244,7 @@ export class Renin {
       }
       if (e.key === 'h') {
         const period = this.sync.music.subdivision * 4;
-        const step = this.sync.stepForFrame(this.frame);
+        const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
         if (newStep === step) {
           newStep -= period;
@@ -262,7 +263,7 @@ export class Renin {
       }
       if (e.key === 'j') {
         const period = this.sync.music.subdivision * 1;
-        const step = this.sync.stepForFrame(this.frame);
+        const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
         if (newStep === step) {
           newStep -= period;
