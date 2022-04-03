@@ -38,7 +38,7 @@ export class Add extends ReninNode {
     this.camera.position.z = 10;
   }
 
-  public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
+  public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
     this.screen.material.uniforms.time.value = frame / 60;
     this.screen.material.uniforms.tA.value = this.children.spinningcube.renderTarget.texture;
     this.screen.material.uniforms.tB.value = this.children.jumpingbox.renderTarget.texture;

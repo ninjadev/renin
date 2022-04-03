@@ -1,11 +1,13 @@
-import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture } from 'three';
+import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture, RepeatWrapping } from 'three';
 import { colors } from './colors';
 import { Music } from './music';
 import { Options, Renin } from './renin';
 import { ReninNode } from './ReninNode';
-import { getWindowWidth } from './utils';
+import { UIBox } from './uibox';
+import { getWindowHeight, getWindowWidth, gradientCanvas } from './utils';
 
 export const barHeight = 48;
+const glowSize = 12;
 
 const fallbackTexture = new Texture();
 const store: { [key: string]: Texture } = {};
@@ -22,11 +24,11 @@ const getNodeTexture = (name: string) => {
     }
     ctx.fillStyle = colors.slate._500;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = colors.slate._100;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = '60px Arial';
-    ctx.fillText(name, 16, canvas.height / 2);
+    ctx.font = '60px Barlow';
+    ctx.fillText(name, 32, canvas.height / 2);
     const texture = new CanvasTexture(canvas);
     store[name] = texture;
     return texture;
@@ -39,21 +41,26 @@ export class AudioBar {
   nodeContainer = new Object3D();
   cuePoints: Mesh[];
   renin: Renin;
+  audioBar: UIBox;
+
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
     }
 
+    this.audioTrack.material.opacity = this.music.paused ? 0 : 0.3;
+    this.audioTrack.material.needsUpdate = true;
+
     for (const [i, mesh] of this.cuePoints.entries()) {
       mesh.visible = cuePoints[i] !== undefined;
       const progress = cuePoints[i] / 60 / this.music.getDuration();
       mesh.position.z = 1.5;
-      mesh.position.x = 16 + progress * (this.width - 32) - this.width / 2 - 1;
+      mesh.position.x = 16 + progress * (this.width - 32) - this.width / 2;
     }
 
     const audioProgress = this.music.getCurrentTime() / this.music.getDuration();
-    this.audioTrack.position.z = 2;
-    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - 1;
+    this.audioTrack.position.z = 10;
+    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - glowSize / 2;
 
     const geometry = new BoxGeometry();
     for (const child of this.nodeContainer.children) {
@@ -71,24 +78,26 @@ export class AudioBar {
           recurse(child, depth + ++i, startFrame, endFrame);
         }
       }
-      const box = new Mesh(geometry, new MeshBasicMaterial({ map: getNodeTexture(node.constructor.name) }));
-      box.scale.y = 24;
+      const box = new UIBox({ shadowSize: 8, shadowOpacity: 0.06 });
+      box.setTexture(getNodeTexture(node.constructor.name));
       const size = (endFrame - startFrame) / 60 / renin.music.getDuration();
-      box.scale.x = size * (this.width - 32);
-      box.position.x =
-        (startFrame / 60 / renin.music.getDuration()) * (this.width - 32) - (this.width - 32) / 2 + box.scale.x / 2;
-      box.position.z = 2;
-      box.position.y = (24 + 8) * depth;
+      box.setSize(size * (this.width - 32), 24);
+      box.object3d.position.x =
+        (startFrame / 60 / renin.music.getDuration()) * (this.width - 32) -
+        (this.width - 32) / 2 +
+        box.object3d.scale.x / 2;
+      box.object3d.position.z = 2;
+      box.object3d.position.y = (24 + 8) * depth;
       const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
-      box.material.map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
-      this.nodeContainer.add(box);
+      box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
+      this.nodeContainer.add(box.object3d);
 
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
         const preview = new Mesh(geometry, new MeshBasicMaterial({ map: renderTarget.texture }));
         preview.position.z = 5;
-        preview.position.x = box.position.x + box.scale.x / 2 - 16;
-        preview.position.y = box.position.y;
+        preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - 16;
+        preview.position.y = box.object3d.position.y;
         preview.scale.x = 32;
         preview.scale.y = 24;
         this.nodeContainer.add(preview);
@@ -100,15 +109,19 @@ export class AudioBar {
       renin.root.startFrame,
       renin.root.endFrame === -1 ? renin.music.getDuration() * 60 : renin.root.endFrame
     );
-    this.audioTrack.scale.y = 64 + deepestDepth * 24;
-    this.cuePoints[0].scale.y = 64 + deepestDepth * 24;
-    this.cuePoints[1].scale.y = 64 + deepestDepth * 24;
+    const trackHeight = barHeight + (deepestDepth + 1) * 32;
+    this.audioTrack.scale.y = trackHeight;
+    this.audioTrack.position.y = -getWindowHeight() / 2 + trackHeight / 2 + 16;
+    this.cuePoints[0].scale.y = trackHeight;
+    this.cuePoints[1].scale.y = trackHeight;
+    this.cuePoints[0].position.y = this.audioTrack.position.y;
+    this.cuePoints[1].position.y = this.audioTrack.position.y;
   }
 
   resize(width: number, height: number) {
     this.width = width;
-    this.audioBar.scale.x = width - 32;
-    this.audioBar.position.y = -height / 2 + barHeight / 2 + 16;
+    this.audioBar.setSize(width - 32, barHeight);
+    this.audioBar.object3d.position.y = -height / 2 + barHeight / 2 + 16;
     this.audioTrack.position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[0].position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
@@ -126,64 +139,90 @@ export class AudioBar {
     }
     ctx.fillStyle = colors.slate._800;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const bucketWidth = audioData.length / canvas.width;
+    const barGroups = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate / 4 / 4;
+    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+    const beatWidth = canvas.width / beats;
+    for (let i = 1; i < barGroups; i += 2) {
+      const width = canvas.width / barGroups;
+      const x = width * i + options.beatOffset * beatWidth;
+      ctx.fillStyle = colors.slate._700 + 'cc';
+      ctx.fillRect(x | 0, 0, width, canvas.height);
+    }
+    const bucketCount = beats;
+    const bucketWidth = audioData.length / bucketCount;
     ctx.save();
     ctx.translate(0, canvas.height / 2);
-    ctx.scale(1, canvas.height);
-    ctx.fillStyle = colors.slate._500;
-    for (let i = 0; i < canvas.width; i++) {
-      let min = 0;
-      let max = 0;
+
+    ctx.fillStyle = colors.slate._600 + 'cc';
+    for (let i = 0; i < bucketCount; i++) {
+      const group = [];
       for (let j = 0; j < bucketWidth; j++) {
         const sample = audioData[(i * bucketWidth + j) | 0];
-        min = Math.min(min, sample);
-        max = Math.max(max, sample);
+        group.push(Math.abs(sample));
       }
-      ctx.fillRect(i, min, 1, max - min);
+      const s = (group.reduce((a, b) => a + b, 0) / group.length) * 2;
+      const width = (1 / bucketCount) * canvas.width;
+      const height = (s * canvas.height * 3) / 2;
+      ctx.fillRect(i * width, -height / 2, width, height);
     }
-    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+
+    ctx.save();
+    ctx.scale(1, canvas.height);
     ctx.fillStyle = colors.slate._300;
     for (let i = 0; i < beats; i++) {
-      ctx.fillStyle = i % 4 === 0 ? colors.slate._300 : colors.slate._500;
+      ctx.fillStyle = i % 4 === 0 ? colors.slate._400 + '88' : colors.slate._500 + '88';
       const x = ((canvas.width * i) / beats) | 0;
-      ctx.fillRect(x - 1, -1, 3, 2);
+      const width = i % 4 === 0 ? 3 : 1;
+      ctx.fillRect((x - width / 2) | 0, -1, width, 2);
     }
     ctx.restore();
-    this.audioBar.material.map = new CanvasTexture(canvas);
-    this.audioBar.material.needsUpdate = true;
+
+    ctx.restore();
+    this.audioBar.setTexture(new CanvasTexture(canvas), true);
   }
-  audioBar: Mesh<BoxGeometry, MeshBasicMaterial>;
   audioTrack: Mesh<BoxGeometry, MeshBasicMaterial>;
   obj = new Object3D();
   constructor(renin: Renin) {
     this.renin = renin;
-    this.audioBar = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
-    this.audioBar.scale.y = barHeight;
-    this.obj.add(this.audioBar);
+    this.audioBar = new UIBox({ shadowSize: 8, shadowOpacity: 0.16 });
+    this.audioBar.setSize(1, barHeight);
+    this.obj.add(this.audioBar.object3d);
     this.audioTrack = new Mesh(
       new BoxGeometry(),
       new MeshBasicMaterial({
-        color: colors.orange._500,
+        map: new CanvasTexture(gradientCanvas),
+        color: colors.green._500,
       })
     );
-    this.audioTrack.scale.set(3, barHeight, 1);
+    if (this.audioTrack.material.map) {
+      this.audioTrack.material.map.needsUpdate = true;
+      this.audioTrack.material.needsUpdate = true;
+      this.audioTrack.material.transparent = true;
+      this.audioTrack.material.opacity = 0.5;
+      this.audioTrack.material.map.repeat.set(-1, 1);
+      this.audioTrack.material.map.wrapS = RepeatWrapping;
+    }
+    const line = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: colors.green._500 }));
+    line.position.x = 0.5;
+    line.scale.x = 2 / glowSize;
+    this.audioTrack.add(line);
     this.cuePoints = [
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: colors.green._500,
+          color: colors.orange._500,
         })
       ),
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: colors.green._300,
+          color: colors.orange._300,
         })
       ),
     ];
-    this.audioTrack.scale.set(3, barHeight, 1);
-    this.cuePoints[0].scale.set(3, barHeight, 1);
-    this.cuePoints[1].scale.set(3, barHeight, 1);
+    this.audioTrack.scale.set(glowSize, barHeight, 1);
+    this.cuePoints[0].scale.set(2, barHeight, 1);
+    this.cuePoints[1].scale.set(2, barHeight, 1);
     this.obj.add(this.audioTrack);
     this.obj.add(this.cuePoints[0]);
     this.obj.add(this.cuePoints[1]);

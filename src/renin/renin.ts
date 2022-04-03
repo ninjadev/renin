@@ -1,14 +1,4 @@
-import {
-  BoxGeometry,
-  Color,
-  Mesh,
-  MeshBasicMaterial,
-  OrthographicCamera,
-  Scene,
-  Vector3,
-  WebGLRenderer,
-  WebGLRenderTarget,
-} from 'three';
+import { Color, OrthographicCamera, Scene, WebGLRenderer, WebGLRenderTarget } from 'three';
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
@@ -18,6 +8,8 @@ import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
 import { registerErrorOverlay } from './error';
 import { Music } from './music';
+import { UIAnimation } from './animation';
+import { UIBox } from './uibox';
 
 export const defaultVertexShader = defaultVert;
 
@@ -28,6 +20,7 @@ export interface Options {
     src: string;
     bpm: number;
     subdivision: number;
+    beatOffset: number;
   };
   root: ReninNode;
 }
@@ -47,13 +40,13 @@ export class Renin {
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: 'white' }));
+  screen = new UIBox({ shadowSize: 16 });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
   screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360);
   isFullscreen: boolean = false;
-  screenTargetScale = new Vector3(640, 360, 1);
+  fullscreenAnimation = new UIAnimation();
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
@@ -89,10 +82,10 @@ export class Renin {
       }
     });
 
-    this.scene.add(this.screen);
+    this.scene.add(this.screen.object3d);
     this.scene.add(this.camera);
-    this.screen.scale.x = 640;
-    this.screen.scale.y = 360;
+    this.screen.object3d.scale.x = 640;
+    this.screen.object3d.scale.y = 360;
     this.sync = new Sync(options.music);
 
     this.scene.add(this.audioBar.obj);
@@ -106,7 +99,7 @@ export class Renin {
       this.audioBar.setMusic(this.music, buffer, options.music);
     })();
 
-    this.camera.position.z = 10;
+    this.camera.position.z = 100;
     this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener('resize', () => {
@@ -214,10 +207,10 @@ export class Renin {
 
     if (this.isFullscreen) {
       this.screenRenderTarget.setSize(width, height);
-      this.screenTargetScale.set(width, (width / 16) * 9, 1);
+      this.fullscreenAnimation.transition(1, 0.15, this.uiTime);
     } else {
       this.screenRenderTarget.setSize(640, 360);
-      this.screenTargetScale.set(640, 360, 1);
+      this.fullscreenAnimation.transition(0, 0.15, this.uiTime);
     }
 
     this.root._resize(width, height);
@@ -288,18 +281,28 @@ export class Renin {
   }
 
   uiUpdate() {
-    this.screen.scale.x = lerp(this.screen.scale.x, this.screenTargetScale.x, 0.5);
-    this.screen.scale.y = lerp(this.screen.scale.y, this.screenTargetScale.y, 0.5);
-    this.screen.position.x = getWindowWidth() / 2 - this.screen.scale.x / 2 - 16;
-    this.screen.position.y = getWindowHeight() / 2 - this.screen.scale.y / 2 - 16;
+    this.fullscreenAnimation.update(this.uiTime);
+    this.screen.setSize(
+      lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
+      lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
+    );
+    this.screen.object3d.position.x = lerp(
+      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - 16,
+      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2,
+      this.fullscreenAnimation.value
+    );
+    this.screen.object3d.position.y = lerp(
+      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - 16,
+      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2,
+      this.fullscreenAnimation.value
+    );
   }
 
   render() {
     const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(frame, this.renderer, this);
-    this.screen.material.map = this.screenRenderTarget.texture;
-    this.screen.material.needsUpdate = true;
+    this.screen.setTexture(this.screenRenderTarget.texture, true);
     this.scene.background = new Color(colors.gray._700);
 
     this.audioBar.render(this, this.cuePoints);
