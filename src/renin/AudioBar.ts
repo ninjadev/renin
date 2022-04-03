@@ -23,11 +23,11 @@ const getNodeTexture = (name: string) => {
     }
     ctx.fillStyle = colors.slate._500;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = colors.slate._100;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = '60px Arial';
-    ctx.fillText(name, 16, canvas.height / 2);
+    ctx.font = '60px Barlow';
+    ctx.fillText(name, 32, canvas.height / 2);
     const texture = new CanvasTexture(canvas);
     store[name] = texture;
     return texture;
