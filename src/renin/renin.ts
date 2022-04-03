@@ -73,7 +73,7 @@ export class Renin {
     this.renderer.domElement.style.bottom = '0px';
 
     this.renderer.domElement.addEventListener('click', (e) => {
-      this.music.initAudioContext();
+      this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
       const padding = 16;
       const audioBarHeight = 64;
@@ -100,8 +100,9 @@ export class Renin {
     (async () => {
       const response = await fetch(options.music.src);
       const data = await response.arrayBuffer();
-      const buffer = await (await this.music.audioContextPromise).decodeAudioData(data);
+      const buffer = await this.music.audioContext.decodeAudioData(data);
       this.music.setBuffer(buffer);
+      //@ts-expect-error
       this.audioBar.setMusic(this.music, buffer, options.music);
     })();
 
@@ -109,11 +110,12 @@ export class Renin {
     this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener('resize', () => {
+      this.music.audioContext.resume();
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
     document.addEventListener('keydown', (e) => {
-      this.music.initAudioContext();
+      this.music.audioContext.resume();
       console.log(e.key);
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;

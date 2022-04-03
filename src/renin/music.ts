@@ -1,6 +1,6 @@
 export class Music {
-  audioContext: AudioContext | null = null;
-  volumeNode: GainNode | null = null;
+  audioContext: AudioContext = new AudioContext();
+  volumeNode: GainNode;
   currentLocalTime: number = 0;
   globalTimeOffset: number = 0;
   playbackRate: number = 1;
@@ -8,23 +8,11 @@ export class Music {
   buffer: AudioBuffer | null = null;
   loaded = false;
   bufferSource: AudioBufferSourceNode | null = null;
-  audioContextPromise: Promise<AudioContext>;
-  audioContextPromiseResolve: ((context: AudioContext) => void) | null = null;
 
   constructor() {
-    this.audioContextPromise = new Promise((resolve) => {
-      this.audioContextPromiseResolve = resolve;
-    });
-  }
-
-  initAudioContext() {
-    if (!this.audioContext) {
-      this.audioContext = new AudioContext();
-      this.volumeNode = this.audioContext.createGain();
-      this.volumeNode.gain.value = 1;
-      this.volumeNode.connect(this.audioContext.destination);
-      this.audioContextPromiseResolve!(this.audioContext);
-    }
+    this.volumeNode = this.audioContext.createGain();
+    this.volumeNode.gain.value = 1;
+    this.volumeNode.connect(this.audioContext.destination);
   }
 
   setBuffer(buffer: AudioBuffer) {
