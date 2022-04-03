@@ -1,4 +1,14 @@
-import { Color, OrthographicCamera, Scene, WebGLRenderer, WebGLRenderTarget } from 'three';
+import {
+  BoxGeometry,
+  CanvasTexture,
+  Color,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  Scene,
+  WebGLRenderer,
+  WebGLRenderTarget,
+} from 'three';
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
@@ -14,6 +24,88 @@ import { UIBox } from './uibox';
 export const defaultVertexShader = defaultVert;
 
 registerErrorOverlay();
+
+const thirdsOverlayCanvas = document.createElement('canvas');
+const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
+thirdsOverlayCanvas.width = 1920;
+thirdsOverlayCanvas.height = 1080;
+if (thirdsOverlayCtx) {
+  const canvas = thirdsOverlayCanvas;
+  const ctx = thirdsOverlayCtx;
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.beginPath();
+  ctx.strokeStyle = '#888';
+  ctx.fillStyle = '#888';
+  ctx.lineWidth = 3;
+
+  /* circle */
+  ctx.arc(1920 / 2, 1080 / 2, 1080 / 2, 0, Math.PI * 2);
+
+  /* thirds */
+  ctx.moveTo(w / 3, 0);
+  ctx.lineTo(w / 3, h);
+  ctx.moveTo((2 * w) / 3, 0);
+  ctx.lineTo((2 * w) / 3, h);
+  ctx.moveTo(0, h / 3);
+  ctx.lineTo(w, h / 3);
+  ctx.moveTo(0, (2 * h) / 3);
+  ctx.lineTo(w, (2 * h) / 3);
+
+  /* center */
+  ctx.moveTo(w / 2 - 8, h / 2);
+  ctx.lineTo(w / 2 + 8, h / 2);
+  ctx.moveTo(w / 2, h / 2 - 8);
+  ctx.lineTo(w / 2, h / 2 + 8);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#88888844';
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.moveTo(w / 2, 0);
+  ctx.lineTo(w / 2, h);
+  ctx.stroke();
+
+  /* golden ratio */
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#888';
+  ctx.beginPath();
+  ctx.setLineDash([16, 16]);
+  const phi = 1.61803398875;
+  ctx.moveTo(w / phi, 0);
+  ctx.lineTo(w / phi, h);
+  ctx.moveTo(w - w / phi, 0);
+  ctx.lineTo(w - w / phi, h);
+  ctx.moveTo(0, h / phi);
+  ctx.lineTo(w, h / phi);
+  ctx.moveTo(0, h - h / phi);
+  ctx.lineTo(w, h - h / phi);
+  ctx.stroke();
+
+  /* grid */
+  ctx.beginPath();
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([2, 6]);
+  ctx.strokeStyle = '#88888811';
+  const gridParts = 48;
+  for (let x = 1; x < gridParts; x++) {
+    for (let y = 1; y < (gridParts / 16) * 9; y++) {
+      ctx.moveTo((x / gridParts) * w, 0);
+      ctx.lineTo((x / gridParts) * w, h);
+      ctx.moveTo(0, (y / ((gridParts / 16) * 9)) * h);
+      ctx.lineTo(w, (y / ((gridParts / 16) * 9)) * h);
+    }
+  }
+  ctx.stroke();
+
+  ctx.font = '100 24px Barlow';
+  ctx.textAlign = 'left';
+  ctx.fillText('Golden ratio', 16, 656);
+  ctx.fillText('Thirds', 16, 710);
+}
+const thirdsOverlayTexture = new CanvasTexture(thirdsOverlayCanvas);
+thirdsOverlayTexture.needsUpdate = true;
 
 export interface Options {
   music: {
@@ -41,6 +133,7 @@ export class Renin {
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({ shadowSize: 16 });
+  framePanel = new UIBox({ shadowSize: 16 });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -50,6 +143,9 @@ export class Renin {
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
+  thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
+  framePanelCanvas: HTMLCanvasElement;
+  framePanelTexture: CanvasTexture;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -65,6 +161,8 @@ export class Renin {
     this.renderer.domElement.style.right = '0px';
     this.renderer.domElement.style.bottom = '0px';
 
+    this.sync = new Sync(options.music);
+
     this.renderer.domElement.addEventListener('click', (e) => {
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
@@ -77,16 +175,32 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          this.jumpToFrame((x * this.music.getDuration() * 60) | 0);
+          const clickedFrame = (x * this.music.getDuration() * 60) | 0;
+          const period = this.sync.music.subdivision * (this.music.paused ? 1 : 4);
+          const step = this.sync.stepForFrame(clickedFrame);
+          let newStep = ((step / period + 0.5) | 0) * period;
+          this.jumpToFrame(this.sync.frameForStep(newStep));
         }
       }
     });
 
     this.scene.add(this.screen.object3d);
+    this.scene.add(this.framePanel.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
-    this.sync = new Sync(options.music);
+
+    this.framePanelCanvas = document.createElement('canvas');
+    this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
+    this.framePanel.setTexture(this.framePanelTexture, true);
+
+    this.thirdsOverlay = new Mesh(
+      new BoxGeometry(),
+      new MeshBasicMaterial({ map: thirdsOverlayTexture, transparent: true })
+    );
+    this.thirdsOverlay.visible = false;
+    this.thirdsOverlay.position.z = 1;
+    this.screen.object3d.add(this.thirdsOverlay);
 
     this.scene.add(this.audioBar.obj);
 
@@ -109,7 +223,11 @@ export class Renin {
 
     document.addEventListener('keydown', (e) => {
       this.music.audioContext.resume();
+      const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
+      if (e.key === 'o') {
+        this.thirdsOverlay.visible = !this.thirdsOverlay.visible;
+      }
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
@@ -138,7 +256,7 @@ export class Renin {
       }
       if (e.key === 'h') {
         const period = this.sync.music.subdivision * 4;
-        const step = this.sync.stepForFrame(this.frame);
+        const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
         if (newStep === step) {
           newStep -= period;
@@ -157,7 +275,7 @@ export class Renin {
       }
       if (e.key === 'j') {
         const period = this.sync.music.subdivision * 1;
-        const step = this.sync.stepForFrame(this.frame);
+        const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
         if (newStep === step) {
           newStep -= period;
@@ -248,6 +366,14 @@ export class Renin {
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
     const frameLength = 1 / 60;
+    if (this.dt >= 10 * frameLength) {
+      /* give up and skip! */
+      this.dt %= frameLength;
+    }
+    if (this.uiDt >= 10 * frameLength) {
+      /* give up and skip! */
+      this.uiDt %= frameLength;
+    }
     while (this.dt >= frameLength) {
       this.dt -= frameLength;
       this.update(this.frame);
@@ -296,16 +422,48 @@ export class Renin {
       getWindowHeight() / 2 - this.screen.object3d.scale.y / 2,
       this.fullscreenAnimation.value
     );
+    this.screen.object3d.position.z = 90;
+
+    if (this.fullscreenAnimation.value > 0.9999) {
+      return;
+    }
+
+    this.framePanel.setSize(128 + 32, 48);
+    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
+    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
+    this.framePanel.object3d.position.z = 50;
+
+    const framePanelCtx = this.framePanelCanvas.getContext('2d');
+    if (framePanelCtx) {
+      const ctx = framePanelCtx;
+      const canvas = this.framePanelCanvas;
+      canvas.width = 128 + 32;
+      canvas.height = 48;
+      ctx.fillStyle = colors.slate._500;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '20px Barlow';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = colors.slate._100;
+      ctx.fillText('' + this.frame, canvas.width - 16, canvas.height / 2);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = colors.slate._300;
+      ctx.font = '100 20px Barlow';
+      ctx.fillText('Frame', 16, canvas.height / 2);
+    }
+    this.framePanelTexture.needsUpdate = true;
   }
 
   render() {
-    const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
-    this.root._render(frame, this.renderer, this);
+    this.root._render(this.frame, this.renderer, this);
     this.screen.setTexture(this.screenRenderTarget.texture, true);
     this.scene.background = new Color(colors.gray._700);
 
-    this.audioBar.render(this, this.cuePoints);
+    if (this.fullscreenAnimation.value < 0.9999) {
+      this.audioBar.render(this, this.cuePoints);
+    }
+
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.scene, this.camera);
   }
