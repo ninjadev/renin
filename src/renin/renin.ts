@@ -290,6 +290,8 @@ export class Renin {
   uiUpdate() {
     this.screen.scale.x = lerp(this.screen.scale.x, this.screenTargetScale.x, 0.5);
     this.screen.scale.y = lerp(this.screen.scale.y, this.screenTargetScale.y, 0.5);
+    this.screen.position.x = getWindowWidth() / 2 - this.screen.scale.x / 2 - 16;
+    this.screen.position.y = getWindowHeight() / 2 - this.screen.scale.y / 2 - 16;
   }
 
   render() {
