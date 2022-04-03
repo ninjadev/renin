@@ -1,21 +1,18 @@
 import {
   AmbientLight,
   BoxGeometry,
-  Color,
   DirectionalLight,
   Mesh,
-  MeshStandardMaterial,
   PerspectiveCamera,
   RawShaderMaterial,
   Scene,
   ShaderMaterial,
-  Uniform,
   WebGLRenderer,
   WebGLRenderTarget,
-} from "three";
-import { colors } from "./color";
-import { Renin, ReninNode, defaultVertexShader } from "./renin/renin";
-import plasma from "./plasma.glsl";
+} from 'three';
+import { Renin, defaultVertexShader } from './renin/renin';
+import plasma from './plasma.glsl';
+import { ReninNode } from './renin/ReninNode';
 
 export class JumpingBox extends ReninNode {
   scene = new Scene();
@@ -37,7 +34,7 @@ export class JumpingBox extends ReninNode {
     );
     this.scene.add(this.cube);
     this.scene.add(new AmbientLight(0.5));
-    const dl = new DirectionalLight("red");
+    const dl = new DirectionalLight('red');
     dl.position.set(1, 1, 1);
     this.scene.add(dl);
 
@@ -50,12 +47,10 @@ export class JumpingBox extends ReninNode {
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.cube.position.x = 2;
-    this.cube.position.y =
-      Math.sin(renin.music.audioElement.currentTime * 1.37) * 2;
+    this.cube.position.y = Math.sin(renin.music.audioElement.currentTime * 1.37) * 2;
     this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
-    this.cube.material.uniforms.time.value =
-      renin.music.audioElement.currentTime;
+    this.cube.material.uniforms.time.value = renin.music.audioElement.currentTime;
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }

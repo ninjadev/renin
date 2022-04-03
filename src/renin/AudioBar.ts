@@ -1,15 +1,8 @@
-import {
-  Mesh,
-  BoxGeometry,
-  MeshBasicMaterial,
-  Object3D,
-  CanvasTexture,
-  Raycaster,
-  Vector2,
-  Texture,
-} from "three";
-import { colors } from "./colors";
-import { getWindowWidth, Options, Renin, ReninNode } from "./renin";
+import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Raycaster, Vector2, Texture } from 'three';
+import { colors } from './colors';
+import { Options, Renin } from './renin';
+import { ReninNode } from './ReninNode';
+import { getWindowWidth } from './utils';
 
 export const barHeight = 48;
 
@@ -19,9 +12,7 @@ export class Music {
   audioElement = new Audio();
   isPlaying = false;
   constructor() {
-    this.musicSource = this.audioContext.createMediaElementSource(
-      this.audioElement
-    );
+    this.musicSource = this.audioContext.createMediaElementSource(this.audioElement);
     this.musicSource.connect(this.audioContext.destination);
   }
 }
@@ -32,19 +23,19 @@ const getNodeTexture = (name: string) => {
   if (name in store) {
     return store[name];
   } else {
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = 1024 * 2;
     canvas.height = 128;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
       return fallbackTexture;
     }
     ctx.fillStyle = colors.slate._500;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "left";
-    ctx.font = "60px Arial";
+    ctx.fillStyle = 'white';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.font = '60px Arial';
     ctx.fillText(name, 16, canvas.height / 2);
     const texture = new CanvasTexture(canvas);
     store[name] = texture;
@@ -69,11 +60,9 @@ export class AudioBar {
       mesh.position.x = 16 + progress * (this.width - 32) - this.width / 2 - 1;
     }
 
-    const audioProgress =
-      this.music.audioElement.currentTime / this.music.audioElement.duration;
+    const audioProgress = this.music.audioElement.currentTime / this.music.audioElement.duration;
     this.audioTrack.position.z = 2;
-    this.audioTrack.position.x =
-      16 + audioProgress * (this.width - 32) - this.width / 2 - 1;
+    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - 1;
 
     const geometry = new BoxGeometry();
     for (const child of this.nodeContainer.children) {
@@ -81,54 +70,35 @@ export class AudioBar {
     }
     this.obj.add(this.nodeContainer);
     let deepestDepth = 0;
-    const recurse = (
-      node: ReninNode,
-      depth = 0,
-      startFrameBound: number,
-      endFrameBound: number
-    ) => {
+    const recurse = (node: ReninNode, depth = 0, startFrameBound: number, endFrameBound: number) => {
       const startFrame = Math.max(node.startFrame, startFrameBound);
-      const endFrame = Math.min(
-        node.endFrame === -1 ? endFrameBound : node.endFrame,
-        endFrameBound
-      );
+      const endFrame = Math.min(node.endFrame === -1 ? endFrameBound : node.endFrame, endFrameBound);
       deepestDepth = Math.max(depth, deepestDepth);
-      if ("children" in node && node.children) {
+      if ('children' in node && node.children) {
         let i = 0;
         for (const child of Object.values(node.children)) {
           recurse(child, depth + ++i, startFrame, endFrame);
         }
       }
-      const box = new Mesh(
-        geometry,
-        new MeshBasicMaterial({ map: getNodeTexture(node.constructor.name) })
-      );
+      const box = new Mesh(geometry, new MeshBasicMaterial({ map: getNodeTexture(node.constructor.name) }));
       box.scale.y = 24;
-      const size =
-        (endFrame - startFrame) / 60 / renin.music.audioElement.duration;
+      const size = (endFrame - startFrame) / 60 / renin.music.audioElement.duration;
       box.scale.x = size * (this.width - 32);
       box.position.x =
-        (startFrame / 60 / renin.music.audioElement.duration) *
-          (this.width - 32) -
+        (startFrame / 60 / renin.music.audioElement.duration) * (this.width - 32) -
         (this.width - 32) / 2 +
         box.scale.x / 2;
       box.position.z = 2;
       box.position.y = (24 + 8) * depth;
-      const windowSizeIndependantMagicScaleNumber =
-        (getWindowWidth() / 1024) * 2.5;
-      box.material.map!.repeat.set(
-        windowSizeIndependantMagicScaleNumber * size,
-        1
-      );
+      const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
+      box.material.map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
       this.nodeContainer.add(box);
     };
     recurse(
       renin.root,
       0,
       renin.root.startFrame,
-      renin.root.endFrame === -1
-        ? renin.music.audioElement.duration * 60
-        : renin.root.endFrame
+      renin.root.endFrame === -1 ? renin.music.audioElement.duration * 60 : renin.root.endFrame
     );
     this.audioTrack.scale.y = 64 + deepestDepth * 24;
     this.cuePoints[0].scale.y = 64 + deepestDepth * 24;
@@ -144,13 +114,8 @@ export class AudioBar {
     this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
     this.nodeContainer.position.y = -height / 2 + barHeight + 28 + 8;
   }
-  async setMusic(
-    renin: Renin,
-    music: Music,
-    blob: Blob,
-    options: Options["music"]
-  ) {
-    renin.renderer.domElement.addEventListener("click", (e) => {
+  async setMusic(renin: Renin, music: Music, blob: Blob, options: Options['music']) {
+    renin.renderer.domElement.addEventListener('click', (e) => {
       const raycaster = new Raycaster();
       const point = new Vector2(e.clientX, e.clientY);
       raycaster.setFromCamera(point, renin.camera);
@@ -160,13 +125,11 @@ export class AudioBar {
       }
     });
     this.music = music;
-    const audioData = (
-      await music.audioContext.decodeAudioData(await blob.arrayBuffer())
-    ).getChannelData(0);
-    const canvas = document.createElement("canvas");
+    const audioData = (await music.audioContext.decodeAudioData(await blob.arrayBuffer())).getChannelData(0);
+    const canvas = document.createElement('canvas');
     canvas.width = 1024 * 4;
     canvas.height = 128;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
       return;
     }
@@ -187,8 +150,7 @@ export class AudioBar {
       }
       ctx.fillRect(i, min, 1, max - min);
     }
-    const beats =
-      ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
     ctx.fillStyle = colors.slate._300;
     for (let i = 0; i < beats; i++) {
       ctx.fillStyle = i % 4 === 0 ? colors.slate._300 : colors.slate._500;

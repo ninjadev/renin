@@ -1,7 +1,6 @@
 import {
   AmbientLight,
   BoxGeometry,
-  Color,
   DirectionalLight,
   Mesh,
   PerspectiveCamera,
@@ -10,10 +9,10 @@ import {
   ShaderMaterial,
   WebGLRenderer,
   WebGLRenderTarget,
-} from "three";
-import { colors } from "./color";
-import { Renin, ReninNode, defaultVertexShader } from "./renin/renin";
-import plasma from "./plasma.glsl";
+} from 'three';
+import { Renin, defaultVertexShader } from './renin/renin';
+import plasma from './plasma.glsl';
+import { ReninNode } from './renin/ReninNode';
 
 export class SpinningCube extends ReninNode {
   startFrame = 1234;
@@ -36,7 +35,7 @@ export class SpinningCube extends ReninNode {
     );
     this.scene.add(this.cube);
     this.scene.add(new AmbientLight(0.5));
-    const dl = new DirectionalLight("red");
+    const dl = new DirectionalLight('red');
     dl.position.set(1, 1, 1);
     this.scene.add(dl);
     this.scene.add(this.camera);
@@ -51,8 +50,7 @@ export class SpinningCube extends ReninNode {
     this.cube.rotation.y = renin.music.audioElement.currentTime * 1.37;
     this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
-    this.cube.material.uniforms.time.value =
-      renin.music.audioElement.currentTime;
+    this.cube.material.uniforms.time.value = renin.music.audioElement.currentTime;
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }

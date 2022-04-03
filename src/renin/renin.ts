@@ -1,6 +1,5 @@
 import {
   BoxGeometry,
-  CanvasTexture,
   Color,
   Mesh,
   MeshBasicMaterial,
@@ -9,99 +8,19 @@ import {
   Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
-} from "three";
-import { AudioBar, Music } from "./AudioBar";
-import { Sync } from "./sync";
-import defaultVert from "./default.vert.glsl";
-import { lerp } from "../interpolations";
-import { colors } from "./colors";
-import {ErrorPayload} from 'vite';
-
-export const getWindowWidth = () => window.innerWidth;
-export const getWindowHeight = () => window.innerHeight;
+} from 'three';
+import { AudioBar, Music } from './AudioBar';
+import { Sync } from './sync';
+import defaultVert from './default.vert.glsl';
+import { lerp } from '../interpolations';
+import { colors } from './colors';
+import { getWindowHeight, getWindowWidth } from './utils';
+import { ReninNode } from './ReninNode';
+import { registerErrorOverlay } from './error';
 
 export const defaultVertexShader = defaultVert;
 
-// REGISTER ERROR OVERLAY
-const showErrorOverlay = (err: ErrorPayload['err']) => {
-  // must be within function call because that's when the element is defined for sure.
-  const ErrorOverlay = customElements.get("vite-error-overlay");
-  // don't open outside vite environment
-  if (!ErrorOverlay) {
-    return;
-  }
-  console.log(err);
-  const overlay = new ErrorOverlay(err);
-  document.body.appendChild(overlay);
-};
-
-window.addEventListener("error", ({error}) => showErrorOverlay(error));
-window.addEventListener("unhandledrejection", ({ reason }) =>
-  showErrorOverlay(reason)
-);
-
-export function children<T>(spec: any): T {
-  const store: any = {};
-  return new Proxy(spec, {
-    set: (target, prop, value) => {
-      store[prop] = value;
-      return true;
-    },
-    get: (_target, prop) => {
-      if (store[prop]) {
-        return store[prop];
-      } else {
-        store[prop] = new spec[prop]();
-        return store[prop];
-      }
-    },
-  });
-}
-
-export class ReninNode {
-  startFrame: number = 0;
-  endFrame: number = -1;
-  children?: { [key: string]: ReninNode };
-  id: string;
-  update(frame: number): void {}
-  render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
-
-  constructor() {
-    this.id = this.constructor.name + "-" + ((1000000 * Math.random()) | 0);
-    console.log("new", this.id);
-  }
-  public _update(frame: number) {
-    if (
-      frame < this.startFrame ||
-      (frame >= this.endFrame && this.endFrame !== -1)
-    ) {
-      return;
-    }
-    if ("children" in this) {
-      for (const child of Object.values(this.children || {})) {
-        child._update(frame);
-      }
-    }
-    this.update?.(frame);
-  }
-
-  public _render(frame: number, renderer: WebGLRenderer, renin: Renin) {
-    if (
-      frame < this.startFrame ||
-      (frame >= this.endFrame && this.endFrame !== -1)
-    ) {
-      return;
-    }
-    if ("children" in this) {
-      for (const child of Object.values(this.children || {})) {
-        child._render(frame, renderer, renin);
-      }
-    }
-    const oldRenderTarget = renderer.getRenderTarget();
-    this.render?.(frame, renderer, renin);
-    renderer.setRenderTarget(oldRenderTarget);
-  }
-}
+registerErrorOverlay();
 
 export interface Options {
   music: {
@@ -127,10 +46,7 @@ export class Renin {
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new Mesh(
-    new BoxGeometry(),
-    new MeshBasicMaterial({ color: "white" })
-  );
+  screen = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: 'white' }));
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -145,15 +61,15 @@ export class Renin {
     Renin.instance = this;
     this.root = options.root;
 
-    const body = document.getElementsByTagName("body")[0];
+    const body = document.getElementsByTagName('body')[0];
     body.appendChild(this.renderer.domElement);
-    this.renderer.domElement.style.position = "fixed";
-    this.renderer.domElement.style.top = "0px";
-    this.renderer.domElement.style.left = "0px";
-    this.renderer.domElement.style.right = "0px";
-    this.renderer.domElement.style.bottom = "0px";
+    this.renderer.domElement.style.position = 'fixed';
+    this.renderer.domElement.style.top = '0px';
+    this.renderer.domElement.style.left = '0px';
+    this.renderer.domElement.style.right = '0px';
+    this.renderer.domElement.style.bottom = '0px';
 
-    this.renderer.domElement.addEventListener("click", (e) => {
+    this.renderer.domElement.addEventListener('click', (e) => {
       const screenHeight = getWindowHeight();
       const padding = 16;
       const audioBarHeight = 64;
@@ -188,17 +104,17 @@ export class Renin {
     this.camera.position.z = 10;
     this.resize(getWindowWidth(), getWindowHeight());
 
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', (e) => {
       console.log(e.key);
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
       }
-      if (e.key === " ") {
+      if (e.key === ' ') {
         if (this.music.isPlaying) {
           this.music.isPlaying = false;
           this.music.audioElement.pause();
@@ -208,7 +124,7 @@ export class Renin {
           this.music.audioElement.play();
         }
       }
-      if (e.key === "g") {
+      if (e.key === 'g') {
         const step = this.sync.stepForFrame(this.frame);
         const quantizedStep = step - (step % this.sync.music.subdivision);
         if (this.cuePoints.length < 2) {
@@ -217,13 +133,13 @@ export class Renin {
           this.cuePoints = [];
         }
       }
-      if (e.key === "J") {
+      if (e.key === 'J') {
         this.jumpToFrame(this.frame - 1);
       }
-      if (e.key === "K") {
+      if (e.key === 'K') {
         this.jumpToFrame(this.frame + 1);
       }
-      if (e.key === "h") {
+      if (e.key === 'h') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -232,7 +148,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "l") {
+      if (e.key === 'l') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -242,7 +158,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "j") {
+      if (e.key === 'j') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -251,7 +167,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "k") {
+      if (e.key === 'k') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -261,7 +177,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "H") {
+      if (e.key === 'H') {
         this.jumpToFrame(0);
       }
     });
@@ -292,7 +208,7 @@ export class Renin {
   /* for hmr */
   register(newNode: ReninNode) {
     function recurse(node: ReninNode): ReninNode | null {
-      if ("children" in node && node.children) {
+      if ('children' in node && node.children) {
         for (const [id, child] of Object.entries(node.children)) {
           const updated = recurse(child);
           if (updated) {
@@ -353,16 +269,8 @@ export class Renin {
   }
 
   uiUpdate() {
-    this.screen.scale.x = lerp(
-      this.screen.scale.x,
-      this.screenTargetScale.x,
-      0.5
-    );
-    this.screen.scale.y = lerp(
-      this.screen.scale.y,
-      this.screenTargetScale.y,
-      0.5
-    );
+    this.screen.scale.x = lerp(this.screen.scale.x, this.screenTargetScale.x, 0.5);
+    this.screen.scale.y = lerp(this.screen.scale.y, this.screenTargetScale.y, 0.5);
   }
 
   render() {
