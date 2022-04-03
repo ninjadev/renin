@@ -1,12 +1,14 @@
-import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture } from 'three';
+import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture, RepeatWrapping } from 'three';
+import { easeIn } from '../interpolations';
 import { colors } from './colors';
 import { Music } from './music';
 import { Options, Renin } from './renin';
 import { ReninNode } from './ReninNode';
 import { UIBox } from './uibox';
-import { getWindowHeight, getWindowWidth } from './utils';
+import { getWindowHeight, getWindowWidth, gradientCanvas } from './utils';
 
 export const barHeight = 48;
+const glowSize = 12;
 
 const fallbackTexture = new Texture();
 const store: { [key: string]: Texture } = {};
@@ -41,10 +43,14 @@ export class AudioBar {
   cuePoints: Mesh[];
   renin: Renin;
   audioBar: UIBox;
+
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
     }
+
+    this.audioTrack.material.opacity = this.music.paused ? 0 : 0.3;
+    this.audioTrack.material.needsUpdate = true;
 
     for (const [i, mesh] of this.cuePoints.entries()) {
       mesh.visible = cuePoints[i] !== undefined;
@@ -55,7 +61,7 @@ export class AudioBar {
 
     const audioProgress = this.music.getCurrentTime() / this.music.getDuration();
     this.audioTrack.position.z = 10;
-    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2;
+    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - glowSize / 2;
 
     const geometry = new BoxGeometry();
     for (const child of this.nodeContainer.children) {
@@ -171,10 +177,22 @@ export class AudioBar {
     this.audioTrack = new Mesh(
       new BoxGeometry(),
       new MeshBasicMaterial({
+        map: new CanvasTexture(gradientCanvas),
         color: colors.green._500,
       })
     );
-    this.audioTrack.scale.set(3, barHeight, 1);
+    if (this.audioTrack.material.map) {
+      this.audioTrack.material.map.needsUpdate = true;
+      this.audioTrack.material.needsUpdate = true;
+      this.audioTrack.material.transparent = true;
+      this.audioTrack.material.opacity = 0.5;
+      this.audioTrack.material.map.repeat.set(-1, 1);
+      this.audioTrack.material.map.wrapS = RepeatWrapping;
+    }
+    const line = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: colors.green._500 }));
+    line.position.x = 0.5;
+    line.scale.x = 2 / glowSize;
+    this.audioTrack.add(line);
     this.cuePoints = [
       new Mesh(
         new BoxGeometry(),
@@ -189,7 +207,7 @@ export class AudioBar {
         })
       ),
     ];
-    this.audioTrack.scale.set(2, barHeight, 1);
+    this.audioTrack.scale.set(glowSize, barHeight, 1);
     this.cuePoints[0].scale.set(2, barHeight, 1);
     this.cuePoints[1].scale.set(2, barHeight, 1);
     this.obj.add(this.audioTrack);
