@@ -15,11 +15,30 @@ import { Sync } from "./sync";
 import defaultVert from "./default.vert.glsl";
 import { lerp } from "../interpolations";
 import { colors } from "./colors";
+import {ErrorPayload} from 'vite';
 
 export const getWindowWidth = () => window.innerWidth;
 export const getWindowHeight = () => window.innerHeight;
 
 export const defaultVertexShader = defaultVert;
+
+// REGISTER ERROR OVERLAY
+const showErrorOverlay = (err: ErrorPayload['err']) => {
+  // must be within function call because that's when the element is defined for sure.
+  const ErrorOverlay = customElements.get("vite-error-overlay");
+  // don't open outside vite environment
+  if (!ErrorOverlay) {
+    return;
+  }
+  console.log(err);
+  const overlay = new ErrorOverlay(err);
+  document.body.appendChild(overlay);
+};
+
+window.addEventListener("error", ({error}) => showErrorOverlay(error));
+window.addEventListener("unhandledrejection", ({ reason }) =>
+  showErrorOverlay(reason)
+);
 
 export function children<T>(spec: any): T {
   const store: any = {};
