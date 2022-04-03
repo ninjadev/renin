@@ -165,7 +165,7 @@ export class AudioBar {
     this.audioTrack = new Mesh(
       new BoxGeometry(),
       new MeshBasicMaterial({
-        color: colors.orange._500,
+        color: colors.green._500,
       })
     );
     this.audioTrack.scale.set(3, barHeight, 1);
@@ -173,13 +173,13 @@ export class AudioBar {
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: colors.green._500,
+          color: colors.orange._500,
         })
       ),
       new Mesh(
         new BoxGeometry(),
         new MeshBasicMaterial({
-          color: colors.green._300,
+          color: colors.orange._300,
         })
       ),
     ];
