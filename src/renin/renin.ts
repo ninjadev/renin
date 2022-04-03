@@ -1,4 +1,14 @@
-import { Color, OrthographicCamera, Scene, WebGLRenderer, WebGLRenderTarget } from 'three';
+import {
+  BoxGeometry,
+  CanvasTexture,
+  Color,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  Scene,
+  WebGLRenderer,
+  WebGLRenderTarget,
+} from 'three';
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
@@ -14,6 +24,88 @@ import { UIBox } from './uibox';
 export const defaultVertexShader = defaultVert;
 
 registerErrorOverlay();
+
+const thirdsOverlayCanvas = document.createElement('canvas');
+const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
+thirdsOverlayCanvas.width = 1920;
+thirdsOverlayCanvas.height = 1080;
+if (thirdsOverlayCtx) {
+  const canvas = thirdsOverlayCanvas;
+  const ctx = thirdsOverlayCtx;
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.beginPath();
+  ctx.strokeStyle = '#888';
+  ctx.fillStyle = '#888';
+  ctx.lineWidth = 3;
+
+  /* circle */
+  ctx.arc(1920 / 2, 1080 / 2, 1080 / 2, 0, Math.PI * 2);
+
+  /* thirds */
+  ctx.moveTo(w / 3, 0);
+  ctx.lineTo(w / 3, h);
+  ctx.moveTo((2 * w) / 3, 0);
+  ctx.lineTo((2 * w) / 3, h);
+  ctx.moveTo(0, h / 3);
+  ctx.lineTo(w, h / 3);
+  ctx.moveTo(0, (2 * h) / 3);
+  ctx.lineTo(w, (2 * h) / 3);
+
+  /* center */
+  ctx.moveTo(w / 2 - 8, h / 2);
+  ctx.lineTo(w / 2 + 8, h / 2);
+  ctx.moveTo(w / 2, h / 2 - 8);
+  ctx.lineTo(w / 2, h / 2 + 8);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#88888844';
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.moveTo(w / 2, 0);
+  ctx.lineTo(w / 2, h);
+  ctx.stroke();
+
+  /* golden ratio */
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#888';
+  ctx.beginPath();
+  ctx.setLineDash([16, 16]);
+  const phi = 1.61803398875;
+  ctx.moveTo(w / phi, 0);
+  ctx.lineTo(w / phi, h);
+  ctx.moveTo(w - w / phi, 0);
+  ctx.lineTo(w - w / phi, h);
+  ctx.moveTo(0, h / phi);
+  ctx.lineTo(w, h / phi);
+  ctx.moveTo(0, h - h / phi);
+  ctx.lineTo(w, h - h / phi);
+  ctx.stroke();
+
+  /* grid */
+  ctx.beginPath();
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([2, 6]);
+  ctx.strokeStyle = '#88888811';
+  const gridParts = 48;
+  for (let x = 1; x < gridParts; x++) {
+    for (let y = 1; y < (gridParts / 16) * 9; y++) {
+      ctx.moveTo((x / gridParts) * w, 0);
+      ctx.lineTo((x / gridParts) * w, h);
+      ctx.moveTo(0, (y / ((gridParts / 16) * 9)) * h);
+      ctx.lineTo(w, (y / ((gridParts / 16) * 9)) * h);
+    }
+  }
+  ctx.stroke();
+
+  ctx.font = '100 24px Barlow';
+  ctx.textAlign = 'left';
+  ctx.fillText('Golden ratio', 16, 656);
+  ctx.fillText('Thirds', 16, 710);
+}
+const thirdsOverlayTexture = new CanvasTexture(thirdsOverlayCanvas);
+thirdsOverlayTexture.needsUpdate = true;
 
 export interface Options {
   music: {
@@ -50,6 +142,7 @@ export class Renin {
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
+  thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -86,6 +179,15 @@ export class Renin {
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
+
+    this.thirdsOverlay = new Mesh(
+      new BoxGeometry(),
+      new MeshBasicMaterial({ map: thirdsOverlayTexture, transparent: true })
+    );
+    this.thirdsOverlay.visible = false;
+    this.thirdsOverlay.position.z = 1;
+    this.screen.object3d.add(this.thirdsOverlay);
+
     this.sync = new Sync(options.music);
 
     this.scene.add(this.audioBar.obj);
@@ -110,6 +212,9 @@ export class Renin {
     document.addEventListener('keydown', (e) => {
       this.music.audioContext.resume();
       console.log(e.key);
+      if (e.key === 'o') {
+        this.thirdsOverlay.visible = !this.thirdsOverlay.visible;
+      }
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
@@ -296,6 +401,7 @@ export class Renin {
       getWindowHeight() / 2 - this.screen.object3d.scale.y / 2,
       this.fullscreenAnimation.value
     );
+    this.screen.object3d.position.z = 90;
   }
 
   render() {
