@@ -4,7 +4,7 @@ export const getWindowHeight = () => window.innerHeight;
 export function children<T>(spec: any): T {
   const store: any = {};
   return new Proxy(spec, {
-    set: (target, prop, value) => {
+    set: (_target, prop, value) => {
       store[prop] = value;
       return true;
     },

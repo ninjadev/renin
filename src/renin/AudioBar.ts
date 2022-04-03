@@ -1,5 +1,4 @@
 import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture, RepeatWrapping } from 'three';
-import { easeIn } from '../interpolations';
 import { colors } from './colors';
 import { Music } from './music';
 import { Options, Renin } from './renin';

@@ -1,13 +1,4 @@
-import {
-  BoxGeometry,
-  Color,
-  Mesh,
-  MeshBasicMaterial,
-  Object3D,
-  RawShaderMaterial,
-  ShaderMaterial,
-  Texture,
-} from 'three';
+import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, RawShaderMaterial, ShaderMaterial, Texture } from 'three';
 import { defaultVertexShader } from './renin';
 import shadowShader from './shadowShader.glsl';
 

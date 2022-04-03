@@ -18,15 +18,18 @@ export class ReninNode {
   /* Subclasses can implement this if they need code to happen in the
    * update stage. Update is guaranteed to be called exactly 60 times
    * per second. */
+  // @ts-ignore
   update(frame: number): void {}
 
   /* Subclasses can implement this if they need code to happen in the
    * render stage. Render tried to be called as often as needed, but has
    * no guarantees. If the computer is fast enough, render will
    * typically be called after each update. */
+  // @ts-ignore
   render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
 
   /* Subclasses can implement this if they need to respond to resize events. */
+  // @ts-ignore
   resize(width: number, height: number): void {}
 
   constructor() {
