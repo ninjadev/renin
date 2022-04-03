@@ -1,6 +1,5 @@
 import {
   BoxGeometry,
-  CanvasTexture,
   Color,
   Mesh,
   MeshBasicMaterial,
@@ -9,80 +8,20 @@ import {
   Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
-} from "three";
-import { AudioBar, Music } from "./AudioBar";
-import { Sync } from "./sync";
-import defaultVert from "./default.vert.glsl";
-import { lerp } from "../interpolations";
-import { colors } from "./colors";
-
-export const getWindowWidth = () => window.innerWidth;
-export const getWindowHeight = () => window.innerHeight;
+} from 'three';
+import { AudioBar } from './AudioBar';
+import { Sync } from './sync';
+import defaultVert from './default.vert.glsl';
+import { lerp } from '../interpolations';
+import { colors } from './colors';
+import { getWindowHeight, getWindowWidth } from './utils';
+import { ReninNode } from './ReninNode';
+import { registerErrorOverlay } from './error';
+import { Music } from './music';
 
 export const defaultVertexShader = defaultVert;
 
-export function children<T>(spec: any): T {
-  const store: any = {};
-  return new Proxy(spec, {
-    set: (target, prop, value) => {
-      store[prop] = value;
-      return true;
-    },
-    get: (_target, prop) => {
-      if (store[prop]) {
-        return store[prop];
-      } else {
-        store[prop] = new spec[prop]();
-        return store[prop];
-      }
-    },
-  });
-}
-
-export class ReninNode {
-  startFrame: number = 0;
-  endFrame: number = -1;
-  children?: { [key: string]: ReninNode };
-  id: string;
-  update(frame: number): void {}
-  render(frame: number, renderer: WebGLRenderer, renin: Renin): void {}
-
-  constructor() {
-    this.id = this.constructor.name + "-" + ((1000000 * Math.random()) | 0);
-    console.log("new", this.id);
-  }
-  public _update(frame: number) {
-    if (
-      frame < this.startFrame ||
-      (frame >= this.endFrame && this.endFrame !== -1)
-    ) {
-      return;
-    }
-    if ("children" in this) {
-      for (const child of Object.values(this.children || {})) {
-        child._update(frame);
-      }
-    }
-    this.update?.(frame);
-  }
-
-  public _render(frame: number, renderer: WebGLRenderer, renin: Renin) {
-    if (
-      frame < this.startFrame ||
-      (frame >= this.endFrame && this.endFrame !== -1)
-    ) {
-      return;
-    }
-    if ("children" in this) {
-      for (const child of Object.values(this.children || {})) {
-        child._render(frame, renderer, renin);
-      }
-    }
-    const oldRenderTarget = renderer.getRenderTarget();
-    this.render?.(frame, renderer, renin);
-    renderer.setRenderTarget(oldRenderTarget);
-  }
-}
+registerErrorOverlay();
 
 export interface Options {
   music: {
@@ -97,7 +36,7 @@ export class Renin {
   static instance: Renin;
   width: number = 1;
   height: number = 1;
-  audioBar = new AudioBar();
+  audioBar: AudioBar;
   music = new Music();
   sync: Sync;
   frame = 0;
@@ -108,10 +47,7 @@ export class Renin {
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new Mesh(
-    new BoxGeometry(),
-    new MeshBasicMaterial({ color: "white" })
-  );
+  screen = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: 'white' }));
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -126,15 +62,18 @@ export class Renin {
     Renin.instance = this;
     this.root = options.root;
 
-    const body = document.getElementsByTagName("body")[0];
-    body.appendChild(this.renderer.domElement);
-    this.renderer.domElement.style.position = "fixed";
-    this.renderer.domElement.style.top = "0px";
-    this.renderer.domElement.style.left = "0px";
-    this.renderer.domElement.style.right = "0px";
-    this.renderer.domElement.style.bottom = "0px";
+    this.audioBar = new AudioBar(this);
 
-    this.renderer.domElement.addEventListener("click", (e) => {
+    const body = document.getElementsByTagName('body')[0];
+    body.appendChild(this.renderer.domElement);
+    this.renderer.domElement.style.position = 'fixed';
+    this.renderer.domElement.style.top = '0px';
+    this.renderer.domElement.style.left = '0px';
+    this.renderer.domElement.style.right = '0px';
+    this.renderer.domElement.style.bottom = '0px';
+
+    this.renderer.domElement.addEventListener('click', (e) => {
+      this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
       const padding = 16;
       const audioBarHeight = 64;
@@ -145,7 +84,7 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          this.jumpToFrame((x * this.music.audioElement.duration * 60) | 0);
+          this.jumpToFrame((x * this.music.getDuration() * 60) | 0);
         }
       }
     });
@@ -160,36 +99,36 @@ export class Renin {
 
     (async () => {
       const response = await fetch(options.music.src);
-      const audio = this.music.audioElement;
-      const blob = await response.blob();
-      audio.src = window.URL.createObjectURL(blob);
-      this.audioBar.setMusic(this, this.music, blob, options.music);
+      const data = await response.arrayBuffer();
+      const buffer = await this.music.audioContext.decodeAudioData(data);
+      this.music.setBuffer(buffer);
+      //@ts-expect-error
+      this.audioBar.setMusic(this.music, buffer, options.music);
     })();
 
     this.camera.position.z = 10;
     this.resize(getWindowWidth(), getWindowHeight());
 
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
+      this.music.audioContext.resume();
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', (e) => {
+      this.music.audioContext.resume();
       console.log(e.key);
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
       }
-      if (e.key === " ") {
-        if (this.music.isPlaying) {
-          this.music.isPlaying = false;
-          this.music.audioElement.pause();
+      if (e.key === ' ') {
+        if (!this.music.paused) {
+          this.music.pause();
         } else {
-          this.music.isPlaying = true;
-          this.music.audioContext.resume();
-          this.music.audioElement.play();
+          this.music.play();
         }
       }
-      if (e.key === "g") {
+      if (e.key === 'g') {
         const step = this.sync.stepForFrame(this.frame);
         const quantizedStep = step - (step % this.sync.music.subdivision);
         if (this.cuePoints.length < 2) {
@@ -198,13 +137,13 @@ export class Renin {
           this.cuePoints = [];
         }
       }
-      if (e.key === "J") {
+      if (e.key === 'J') {
         this.jumpToFrame(this.frame - 1);
       }
-      if (e.key === "K") {
+      if (e.key === 'K') {
         this.jumpToFrame(this.frame + 1);
       }
-      if (e.key === "h") {
+      if (e.key === 'h') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -213,7 +152,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "l") {
+      if (e.key === 'l') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -223,7 +162,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "j") {
+      if (e.key === 'j') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -232,7 +171,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "k") {
+      if (e.key === 'k') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -242,8 +181,20 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "H") {
+      if (e.key === 'H') {
         this.jumpToFrame(0);
+      }
+
+      const playbackRates: Record<string, number> = {
+        '6': 0.25,
+        '7': 0.5,
+        '8': 2,
+        '9': 4,
+        '0': 1,
+      };
+
+      if (e.key in playbackRates) {
+        this.music.setPlaybackRate(playbackRates[e.key]);
       }
     });
   }
@@ -268,12 +219,14 @@ export class Renin {
       this.screenRenderTarget.setSize(640, 360);
       this.screenTargetScale.set(640, 360, 1);
     }
+
+    this.root._resize(width, height);
   }
 
   /* for hmr */
   register(newNode: ReninNode) {
     function recurse(node: ReninNode): ReninNode | null {
-      if ("children" in node && node.children) {
+      if ('children' in node && node.children) {
         for (const [id, child] of Object.entries(node.children)) {
           const updated = recurse(child);
           if (updated) {
@@ -296,7 +249,7 @@ export class Renin {
   loop = () => {
     requestAnimationFrame(this.loop);
     this.oldTime = this.time;
-    this.time = this.music.audioElement.currentTime;
+    this.time = this.music.getCurrentTime();
     this.dt += this.time - this.oldTime;
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
@@ -320,8 +273,9 @@ export class Renin {
 
   jumpToFrame(frame: number) {
     this.frame = frame;
-    this.music.audioElement.currentTime = frame / 60;
-    this.time = this.music.audioElement.currentTime;
+    this.music.setCurrentTime(frame / 60);
+    this.time = frame / 60;
+    this.oldTime = this.time;
     this.dt = 0;
     this.update(frame);
     this.uiUpdate();
@@ -334,20 +288,14 @@ export class Renin {
   }
 
   uiUpdate() {
-    this.screen.scale.x = lerp(
-      this.screen.scale.x,
-      this.screenTargetScale.x,
-      0.5
-    );
-    this.screen.scale.y = lerp(
-      this.screen.scale.y,
-      this.screenTargetScale.y,
-      0.5
-    );
+    this.screen.scale.x = lerp(this.screen.scale.x, this.screenTargetScale.x, 0.5);
+    this.screen.scale.y = lerp(this.screen.scale.y, this.screenTargetScale.y, 0.5);
+    this.screen.position.x = getWindowWidth() / 2 - this.screen.scale.x / 2 - 16;
+    this.screen.position.y = getWindowHeight() / 2 - this.screen.scale.y / 2 - 16;
   }
 
   render() {
-    const frame = (this.music.audioElement.currentTime * 60) | 0;
+    const frame = (this.music.getCurrentTime() * 60) | 0;
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(frame, this.renderer, this);
     this.screen.material.map = this.screenRenderTarget.texture;

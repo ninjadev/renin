@@ -33,6 +33,7 @@ export default defineConfig({
     reninPlugin(),
     vitePluginString({
       include: ["**/*.vs", "**/*.fs", "**/*.vert", "**/*.frag", "**/*.glsl"],
+      compress: false,
     }),
   ],
 });
