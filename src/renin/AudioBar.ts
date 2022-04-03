@@ -139,30 +139,44 @@ export class AudioBar {
     }
     ctx.fillStyle = colors.slate._800;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const bucketScale = 1;
-    const bucketWidth = (audioData.length / canvas.width) * bucketScale;
+    const barGroups = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate / 4 / 4;
+    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+    const beatWidth = canvas.width / beats;
+    for (let i = 1; i < barGroups; i += 2) {
+      const width = canvas.width / barGroups;
+      const x = width * i + options.beatOffset * beatWidth;
+      ctx.fillStyle = colors.slate._700 + 'cc';
+      ctx.fillRect(x | 0, 0, width, canvas.height);
+    }
+    const bucketCount = beats;
+    const bucketWidth = audioData.length / bucketCount;
     ctx.save();
     ctx.translate(0, canvas.height / 2);
-    ctx.scale(1, canvas.height);
-    ctx.fillStyle = colors.slate._500;
-    for (let i = 0; i < canvas.width; i++) {
+
+    ctx.fillStyle = colors.slate._600 + 'cc';
+    for (let i = 0; i < bucketCount; i++) {
       const group = [];
       for (let j = 0; j < bucketWidth; j++) {
         const sample = audioData[(i * bucketWidth + j) | 0];
         group.push(Math.abs(sample));
       }
       const s = (group.reduce((a, b) => a + b, 0) / group.length) * 2;
-      const min = -s;
-      const max = s;
-      ctx.fillRect(i * bucketScale, min, bucketScale, max - min);
+      const width = (1 / bucketCount) * canvas.width;
+      const height = (s * canvas.height * 3) / 2;
+      ctx.fillRect(i * width, -height / 2, width, height);
     }
-    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+
+    ctx.save();
+    ctx.scale(1, canvas.height);
     ctx.fillStyle = colors.slate._300;
     for (let i = 0; i < beats; i++) {
-      ctx.fillStyle = i % 4 === 0 ? colors.slate._300 : colors.slate._500;
+      ctx.fillStyle = i % 4 === 0 ? colors.slate._400 + '88' : colors.slate._500 + '88';
       const x = ((canvas.width * i) / beats) | 0;
-      ctx.fillRect(x - 1, -1, 3, 2);
+      const width = i % 4 === 0 ? 3 : 1;
+      ctx.fillRect((x - width / 2) | 0, -1, width, 2);
     }
+    ctx.restore();
+
     ctx.restore();
     this.audioBar.setTexture(new CanvasTexture(canvas), true);
   }

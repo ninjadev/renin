@@ -20,6 +20,7 @@ export interface Options {
     src: string;
     bpm: number;
     subdivision: number;
+    beatOffset: number;
   };
   root: ReninNode;
 }
