@@ -161,6 +161,8 @@ export class Renin {
     this.renderer.domElement.style.right = '0px';
     this.renderer.domElement.style.bottom = '0px';
 
+    this.sync = new Sync(options.music);
+
     this.renderer.domElement.addEventListener('click', (e) => {
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
@@ -173,7 +175,11 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          this.jumpToFrame((x * this.music.getDuration() * 60) | 0);
+          const clickedFrame = (x * this.music.getDuration() * 60) | 0;
+          const period = this.sync.music.subdivision * (this.music.paused ? 1 : 4);
+          const step = this.sync.stepForFrame(clickedFrame);
+          let newStep = ((step / period + 0.5) | 0) * period;
+          this.jumpToFrame(this.sync.frameForStep(newStep));
         }
       }
     });
@@ -195,8 +201,6 @@ export class Renin {
     this.thirdsOverlay.visible = false;
     this.thirdsOverlay.position.z = 1;
     this.screen.object3d.add(this.thirdsOverlay);
-
-    this.sync = new Sync(options.music);
 
     this.scene.add(this.audioBar.obj);
 
