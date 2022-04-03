@@ -5,7 +5,6 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   Scene,
-  Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -18,6 +17,7 @@ import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
 import { registerErrorOverlay } from './error';
 import { Music } from './music';
+import { UIAnimation } from './animation';
 
 export const defaultVertexShader = defaultVert;
 
@@ -53,7 +53,7 @@ export class Renin {
   root: ReninNode;
   screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360);
   isFullscreen: boolean = false;
-  screenTargetScale = new Vector3(640, 360, 1);
+  fullscreenAnimation = new UIAnimation();
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
@@ -214,10 +214,10 @@ export class Renin {
 
     if (this.isFullscreen) {
       this.screenRenderTarget.setSize(width, height);
-      this.screenTargetScale.set(width, (width / 16) * 9, 1);
+      this.fullscreenAnimation.transition(1, 0.15, this.uiTime);
     } else {
       this.screenRenderTarget.setSize(640, 360);
-      this.screenTargetScale.set(640, 360, 1);
+      this.fullscreenAnimation.transition(0, 0.15, this.uiTime);
     }
 
     this.root._resize(width, height);
@@ -288,10 +288,19 @@ export class Renin {
   }
 
   uiUpdate() {
-    this.screen.scale.x = lerp(this.screen.scale.x, this.screenTargetScale.x, 0.5);
-    this.screen.scale.y = lerp(this.screen.scale.y, this.screenTargetScale.y, 0.5);
-    this.screen.position.x = getWindowWidth() / 2 - this.screen.scale.x / 2 - 16;
-    this.screen.position.y = getWindowHeight() / 2 - this.screen.scale.y / 2 - 16;
+    this.fullscreenAnimation.update(this.uiTime);
+    this.screen.scale.x = lerp(640, getWindowWidth(), this.fullscreenAnimation.value);
+    this.screen.scale.y = lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value);
+    this.screen.position.x = lerp(
+      getWindowWidth() / 2 - this.screen.scale.x / 2 - 16,
+      getWindowWidth() / 2 - this.screen.scale.x / 2,
+      this.fullscreenAnimation.value
+    );
+    this.screen.position.y = lerp(
+      getWindowHeight() / 2 - this.screen.scale.y / 2 - 16,
+      getWindowHeight() / 2 - this.screen.scale.y / 2,
+      this.fullscreenAnimation.value
+    );
   }
 
   render() {
