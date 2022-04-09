@@ -1,10 +1,20 @@
-import { Mesh, BoxGeometry, MeshBasicMaterial, Object3D, CanvasTexture, Texture, RepeatWrapping } from 'three';
+import {
+  Mesh,
+  BoxGeometry,
+  MeshBasicMaterial,
+  Object3D,
+  CanvasTexture,
+  Texture,
+  RepeatWrapping,
+  ShaderMaterial,
+} from 'three';
 import { colors } from './colors';
 import { Music } from './music';
-import { Options, Renin } from './renin';
+import { defaultVertexShader, Options, Renin } from './renin';
 import { ReninNode } from './ReninNode';
 import { UIBox } from './uibox';
 import { getWindowHeight, getWindowWidth, gradientCanvas } from './utils';
+import audioBarShader from './audioBarShader.glsl';
 
 export const barHeight = 48;
 const glowSize = 12;
@@ -41,12 +51,46 @@ export class AudioBar {
   nodeContainer = new Object3D();
   cuePoints: Mesh[];
   renin: Renin;
-  audioBar: UIBox;
+  audioBar: UIBox<ShaderMaterial>;
+  zoomStartFrame: number = 0;
+  zoomEndFrame: number = 0;
+  zoomAmount: number = 1;
+
+  zoom(delta: number) {
+    if (!this.music) {
+      return;
+    }
+    this.zoomAmount = Math.max(1, this.zoomAmount * delta);
+    const maxFrame = (this.music.getDuration() * 60) | 0;
+    if (this.zoomAmount === 1) {
+      this.zoomStartFrame = 0;
+      this.zoomEndFrame = maxFrame;
+      return;
+    }
+    const currentFrame = this.renin.frame;
+    const currentFramePercentage = (currentFrame - this.zoomStartFrame) / (this.zoomEndFrame - this.zoomStartFrame);
+    const newFrameWidth = maxFrame / this.zoomAmount;
+    this.zoomStartFrame = currentFrame - currentFramePercentage * newFrameWidth;
+    this.zoomEndFrame = currentFrame + (1 - currentFramePercentage) * newFrameWidth;
+  }
 
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
     }
+
+
+    /* First, we make the obj the correct scale. */
+    const maxFrame = (this.music.getDuration() * 60) | 0;
+    const scale = (this.zoomEndFrame - this.zoomStartFrame) / maxFrame;
+    this.obj.scale.x = 1 / scale;
+
+    this.audioBar.getMaterial().uniforms.width.value = this.width / scale;
+
+    /* Then we move things into the right place */
+    const center = (-0.5 + (this.zoomEndFrame + this.zoomStartFrame) / maxFrame / 2) * (this.width - 32);
+    console.log('cc', center);
+    this.obj.position.x = -center / scale;
 
     this.audioTrack.material.opacity = this.music.paused ? 0 : 0.3;
     this.audioTrack.material.needsUpdate = true;
@@ -121,14 +165,38 @@ export class AudioBar {
   resize(width: number, height: number) {
     this.width = width;
     this.audioBar.setSize(width - 32, barHeight);
+    this.audioBar.getMaterial().uniforms.width.value = width;
+    this.audioBar.getMaterial().uniforms.height.value = barHeight;
     this.audioBar.object3d.position.y = -height / 2 + barHeight / 2 + 16;
     this.audioTrack.position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[0].position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
     this.nodeContainer.position.y = -height / 2 + barHeight + 28 + 8;
+    this.zoom(1);
   }
   async setMusic(music: Music, buffer: AudioBuffer, options: Options['music']) {
     this.music = music;
+
+    const audioData = buffer.getChannelData(0);
+    const beats = ((options.bpm / 60) * audioData.length) / music.audioContext.sampleRate;
+    const bucketCount = beats;
+    const bucketWidth = audioData.length / bucketCount;
+    const beatBins = [];
+    for (let i = 0; i < bucketCount; i++) {
+      const group = [];
+      for (let j = 0; j < bucketWidth; j++) {
+        const sample = audioData[(i * bucketWidth + j) | 0];
+        group.push(Math.abs(sample));
+      }
+      const s = (group.reduce((a, b) => a + b, 0) / group.length) * 2;
+      beatBins.push(s);
+    }
+
+    const audioBarShaderMaterial = this.audioBar.getMaterial();
+    audioBarShaderMaterial.uniforms.beatBins.value = beatBins;
+    audioBarShaderMaterial.uniforms.bpm.value = options.bpm;
+    audioBarShaderMaterial.uniforms.beats.value = beats;
+    /*
     const audioData = buffer.getChannelData(0);
     const canvas = document.createElement('canvas');
     canvas.width = 1024 * 4;
@@ -179,12 +247,31 @@ export class AudioBar {
 
     ctx.restore();
     this.audioBar.setTexture(new CanvasTexture(canvas), true);
+    */
+    this.zoom(1);
   }
   audioTrack: Mesh<BoxGeometry, MeshBasicMaterial>;
   obj = new Object3D();
   constructor(renin: Renin) {
     this.renin = renin;
-    this.audioBar = new UIBox({ shadowSize: 8, shadowOpacity: 0.16 });
+    this.audioBar = new UIBox<ShaderMaterial>({
+      shadowSize: 8,
+      shadowOpacity: 0.16,
+      customMaterial: new ShaderMaterial({
+        fragmentShader: audioBarShader,
+        vertexShader: defaultVertexShader,
+        uniforms: {
+          width: { value: 0 },
+          height: { value: 0 },
+          shadowSize: { value: 0 },
+          shadowOpacity: { value: 0 },
+          beatBins: { value: [] },
+          bpm: { value: 0 },
+          beats: { value: 0 },
+        },
+        transparent: true,
+      }),
+    });
     this.audioBar.setSize(1, barHeight);
     this.obj.add(this.audioBar.object3d);
     this.audioTrack = new Mesh(

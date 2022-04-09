@@ -12,7 +12,7 @@ import {
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
-import { lerp } from '../interpolations';
+import { clamp, lerp } from '../interpolations';
 import { colors } from './colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
@@ -162,6 +162,12 @@ export class Renin {
     this.renderer.domElement.style.bottom = '0px';
 
     this.sync = new Sync(options.music);
+
+    this.renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = Math.max(0, 1 + e.deltaY / 1000);
+      this.audioBar.zoom(delta);
+    });
 
     this.renderer.domElement.addEventListener('click', (e) => {
       this.music.audioContext.resume();

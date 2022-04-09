@@ -1,24 +1,27 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, RawShaderMaterial, ShaderMaterial, Texture } from 'three';
+import { BoxGeometry, Material, Mesh, MeshBasicMaterial, Object3D, RawShaderMaterial, ShaderMaterial, Texture } from 'three';
 import { defaultVertexShader } from './renin';
 import shadowShader from './shadowShader.glsl';
 
-interface UIBoxOptions {
+interface UIBoxOptions<MaterialType> {
   shadowSize: number;
   shadowOpacity: number;
+  customMaterial?: MaterialType;
 }
 
-export class UIBox {
+export class UIBox<MaterialType extends Material = MeshBasicMaterial> {
   object3d = new Object3D();
-  private mesh: Mesh<BoxGeometry, MeshBasicMaterial>;
+  private mesh: Mesh<BoxGeometry, MaterialType>;
   private shadow: Mesh<BoxGeometry, RawShaderMaterial>;
-  options: UIBoxOptions;
+  options: UIBoxOptions<MaterialType>;
 
-  constructor(options: Partial<UIBoxOptions>) {
+  constructor(options: Partial<UIBoxOptions<MaterialType>>) {
     this.options = {
       shadowSize: options.shadowSize ?? 16,
       shadowOpacity: options.shadowOpacity ?? 0.25,
+      //@ts-ignore
+      customMaterial: options.customMaterial ?? new MeshBasicMaterial({})
     };
-    this.mesh = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
+    this.mesh = new Mesh(new BoxGeometry(), this.options.customMaterial);
     this.object3d.add(this.mesh);
     this.shadow = new Mesh(
       new BoxGeometry(),
@@ -32,8 +35,8 @@ export class UIBox {
           shadowOpacity: { value: 0 },
         },
         transparent: true,
-      })
-    );
+      }
+                        ));
     this.object3d.add(this.shadow);
   }
 
@@ -42,6 +45,7 @@ export class UIBox {
   }
 
   setTexture(texture: Texture, needsUpdate: boolean = false) {
+    //@ts-ignore
     this.mesh.material.map = texture;
     this.mesh.material.needsUpdate = needsUpdate;
   }
