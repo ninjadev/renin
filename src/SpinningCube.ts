@@ -49,6 +49,8 @@ export class SpinningCube extends ReninNode {
     this.renderTarget.setSize(width, height);
   }
 
+  public resize(width: number, height: number) {}
+
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.cube.rotation.x = frame * 0.1;
     this.cube.rotation.y = frame * 0.2;

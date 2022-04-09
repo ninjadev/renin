@@ -178,7 +178,7 @@ export class Renin {
           const clickedFrame = (x * this.music.getDuration() * 60) | 0;
           const period = this.sync.music.subdivision * (this.music.paused ? 1 : 4);
           const step = this.sync.stepForFrame(clickedFrame);
-          let newStep = ((step / period + 0.5) | 0) * period;
+          let newStep = (((step + this.sync.music.subdivision) / period) | 0) * period;
           this.jumpToFrame(this.sync.frameForStep(newStep));
         }
       }
