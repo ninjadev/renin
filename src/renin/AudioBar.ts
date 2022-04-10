@@ -74,22 +74,28 @@ export class AudioBar {
     this.zoomEndFrame = currentFrame + (1 - currentFramePercentage) * newFrameWidth;
   }
 
+  pan(delta: number) {
+    this.zoomStartFrame += delta * this.zoomAmount * 100;
+    this.zoomEndFrame += delta * this.zoomAmount * 100;
+  }
+
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
     }
 
-
     /* First, we make the obj the correct scale. */
     const maxFrame = (this.music.getDuration() * 60) | 0;
     const scale = (this.zoomEndFrame - this.zoomStartFrame) / maxFrame;
     this.obj.scale.x = 1 / scale;
+    this.audioTrack.scale.x = scale * 16;
+    this.cuePoints[0].scale.x = scale * 2;
+    this.cuePoints[1].scale.x = scale * 2;
 
     this.audioBar.getMaterial().uniforms.width.value = this.width / scale;
 
     /* Then we move things into the right place */
     const center = (-0.5 + (this.zoomEndFrame + this.zoomStartFrame) / maxFrame / 2) * (this.width - 32);
-    console.log('cc', center);
     this.obj.position.x = -center / scale;
 
     this.audioTrack.material.opacity = this.music.paused ? 0 : 0.3;
@@ -104,7 +110,7 @@ export class AudioBar {
 
     const audioProgress = this.music.getCurrentTime() / this.music.getDuration();
     this.audioTrack.position.z = 10;
-    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - glowSize / 2;
+    this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - (glowSize / 2) * scale;
 
     const geometry = new BoxGeometry();
     for (const child of this.nodeContainer.children) {

@@ -165,8 +165,14 @@ export class Renin {
 
     this.renderer.domElement.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const delta = Math.max(0, 1 + e.deltaY / 1000);
-      this.audioBar.zoom(delta);
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const deltaY = Math.max(0, 1 - e.deltaY / 1000);
+        this.audioBar.zoom(deltaY);
+      } else {
+        const deltaX = e.deltaX / 1000;
+        this.audioBar.pan(deltaX);
+        this.audioBar.zoom(1);
+      }
     });
 
     this.renderer.domElement.addEventListener('click', (e) => {
