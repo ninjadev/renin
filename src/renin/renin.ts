@@ -251,6 +251,29 @@ export class Renin {
           this.music.play();
         }
       }
+      if (e.key === 'b') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current bar */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % (this.sync.music.subdivision * 4));
+        this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision * 4)];
+      }
+      if (e.key === 'n') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current 4 bars */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % (this.sync.music.subdivision * 4 * 4));
+        this.cuePoints = [
+          this.sync.frameForStep(bar),
+          this.sync.frameForStep(bar + this.sync.music.subdivision * 4 * 4),
+        ];
+      }
       if (e.key === 'g') {
         const step = this.sync.stepForFrame(this.frame);
         const quantizedStep = step - (step % this.sync.music.subdivision);
