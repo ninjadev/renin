@@ -187,7 +187,7 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          const clickedFrame = (x * this.music.getDuration() * 60) | 0;
+          const clickedFrame = this.audioBar.getClickedFrame(x);
           const period = this.sync.music.subdivision * (this.music.paused ? 1 : 4);
           const step = this.sync.stepForFrame(clickedFrame);
           let newStep = (((step + this.sync.music.subdivision) / period) | 0) * period;

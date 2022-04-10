@@ -15,6 +15,7 @@ import { ReninNode } from './ReninNode';
 import { UIBox } from './uibox';
 import { getWindowHeight, getWindowWidth, gradientCanvas } from './utils';
 import audioBarShader from './audioBarShader.glsl';
+import { lerp } from '../interpolations';
 
 export const barHeight = 48;
 const glowSize = 12;
@@ -55,6 +56,13 @@ export class AudioBar {
   zoomStartFrame: number = 0;
   zoomEndFrame: number = 0;
   zoomAmount: number = 1;
+
+  getClickedFrame(xInPercent: number): number {
+    if (!this.music) {
+      return 0;
+    }
+    return lerp(this.zoomStartFrame, this.zoomEndFrame, xInPercent);
+  }
 
   zoom(delta: number) {
     if (!this.music) {
