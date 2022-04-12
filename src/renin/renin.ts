@@ -251,6 +251,16 @@ export class Renin {
           this.music.play();
         }
       }
+      if (e.key === 'v') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current beat */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % this.sync.music.subdivision);
+        this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision)];
+      }
       if (e.key === 'b') {
         if (this.cuePoints.length >= 2) {
           this.cuePoints = [];
