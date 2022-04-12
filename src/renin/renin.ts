@@ -21,6 +21,7 @@ import { registerErrorOverlay } from './error';
 import { Music } from './music';
 import { UIAnimation } from './animation';
 import { UIBox } from './uibox';
+import screenShader from './screenShader.glsl';
 import performancePanelShader from './performancePanel.glsl';
 
 export const defaultVertexShader = defaultVert;
@@ -139,7 +140,18 @@ export class Renin {
 
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new UIBox({ shadowSize: 16 });
+  screen = new UIBox({
+    shadowSize: 16,
+    customMaterial: new ShaderMaterial({
+      fragmentShader: screenShader,
+      vertexShader: defaultVertexShader,
+      uniforms: {
+        screen: { value: null },
+        thirdsOverlay: { value: null },
+        thirdsOverlayOpacity: { value: 0 },
+      },
+    }),
+  });
   framePanel = new UIBox({ shadowSize: 16 });
   performancePanel = new UIBox({
     shadowSize: 16,
@@ -167,7 +179,6 @@ export class Renin {
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
-  thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
   framePanelCanvas: HTMLCanvasElement;
   framePanelTexture: CanvasTexture;
   query: WebGLQuery | null = null;
@@ -237,14 +248,6 @@ export class Renin {
     this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
     this.framePanel.setTexture(this.framePanelTexture, true);
 
-    this.thirdsOverlay = new Mesh(
-      new BoxGeometry(),
-      new MeshBasicMaterial({ map: thirdsOverlayTexture, transparent: true })
-    );
-    this.thirdsOverlay.visible = false;
-    this.thirdsOverlay.position.z = 1;
-    this.screen.object3d.add(this.thirdsOverlay);
-
     this.scene.add(this.audioBar.obj);
 
     (async () => {
@@ -269,7 +272,8 @@ export class Renin {
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
       if (e.key === 'o') {
-        this.thirdsOverlay.visible = !this.thirdsOverlay.visible;
+        this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value =
+          this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value === 1 ? 0 : 1;
       }
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
@@ -588,7 +592,10 @@ export class Renin {
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(this.frame, this.renderer, this);
-    this.screen.setTexture(this.screenRenderTarget.texture, true);
+    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
+    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
+    this.screenRenderTarget.texture.needsUpdate = true;
+    this.screen.getMaterial().uniformsNeedUpdate = true;
     this.scene.background = new Color(colors.gray._700);
 
     if (this.fullscreenAnimation.value < 0.9999) {
