@@ -271,6 +271,9 @@ export class Renin {
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
+      if (e.key === 'm') {
+        this.music.setVolume(this.music.getVolume() === 1 ? 0 : 1);
+      }
       if (e.key === 'o') {
         this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value =
           this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value === 1 ? 0 : 1;
