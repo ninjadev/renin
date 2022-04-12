@@ -6,13 +6,14 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   Scene,
+  ShaderMaterial,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
 import { AudioBar } from './AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
-import { clamp, lerp } from '../interpolations';
+import { lerp } from '../interpolations';
 import { colors } from './colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
@@ -20,6 +21,7 @@ import { registerErrorOverlay } from './error';
 import { Music } from './music';
 import { UIAnimation } from './animation';
 import { UIBox } from './uibox';
+import performancePanelShader from './performancePanel.glsl';
 
 export const defaultVertexShader = defaultVert;
 
@@ -130,10 +132,32 @@ export class Renin {
   dt: number = 0;
   cuePoints: number[] = [];
 
+  renderTimesCPU: number[] = [...new Array(128)].map(() => 0);
+  renderTimesCPUIndex: number = 0;
+  renderTimesGPU: number[] = [...new Array(128)].map(() => 0);
+  renderTimesGPUIndex: number = 0;
+
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({ shadowSize: 16 });
   framePanel = new UIBox({ shadowSize: 16 });
+  performancePanel = new UIBox({
+    shadowSize: 16,
+    customMaterial: new ShaderMaterial({
+      fragmentShader: performancePanelShader,
+      vertexShader: defaultVertexShader,
+      uniforms: {
+        renderTimesGPU: { value: [] },
+        renderTimesGPUIndex: { value: 0 },
+        renderTimesCPU: { value: [] },
+        renderTimesCPUIndex: { value: 0 },
+        updateTimes: { value: [] },
+        updateTimesIndex: { value: 0 },
+        uiUpdateTimes: { value: [] },
+        uiUpdateTimesIndex: { value: 0 },
+      },
+    }),
+  });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -146,6 +170,12 @@ export class Renin {
   thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
   framePanelCanvas: HTMLCanvasElement;
   framePanelTexture: CanvasTexture;
+  query: WebGLQuery | null = null;
+  updateTimes: number[] = [...new Array(128)].map(() => 0);
+  updateTimesIndex: number = 0;
+  uiUpdateTimes: number[] = [...new Array(128)].map(() => 0);
+  uiUpdateTimesIndex: number = 0;
+  queryIsActive: boolean = false;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -198,6 +228,7 @@ export class Renin {
 
     this.scene.add(this.screen.object3d);
     this.scene.add(this.framePanel.object3d);
+    this.scene.add(this.performancePanel.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
@@ -367,6 +398,8 @@ export class Renin {
     this.camera.bottom = -height / 2;
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
+    this.framePanel.setSize(width, height);
+    this.performancePanel.setSize(width, height);
 
     if (this.isFullscreen) {
       this.screenRenderTarget.setSize(width, height);
@@ -410,6 +443,7 @@ export class Renin {
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
+    let needsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -423,6 +457,7 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
+      needsRender = true;
 
       if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
         this.jumpToFrame(this.cuePoints[0]);
@@ -431,8 +466,11 @@ export class Renin {
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
       this.uiUpdate();
+      needsRender = true;
     }
-    this.render();
+    if (needsRender) {
+      this.render();
+    }
   };
 
   jumpToFrame(frame: number) {
@@ -447,11 +485,18 @@ export class Renin {
   }
 
   update(frame: number) {
+    const time = performance.now();
     this.sync.update(frame);
     this.root._update(frame);
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.updateTimes[this.updateTimesIndex] = dt;
+      this.updateTimesIndex = (this.updateTimesIndex + 1) % this.updateTimes.length;
+    }
   }
 
   uiUpdate() {
+    const time = performance.now();
     this.fullscreenAnimation.update(this.uiTime);
     this.screen.setSize(
       lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
@@ -478,6 +523,11 @@ export class Renin {
     this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
     this.framePanel.object3d.position.z = 50;
 
+    this.performancePanel.setSize(640, 360);
+    this.performancePanel.object3d.position.x = getWindowWidth() / 2 - 16 - 640 - 16 - 640 / 2;
+    this.performancePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 360 / 2;
+    this.performancePanel.object3d.position.z = 50;
+
     const framePanelCtx = this.framePanelCanvas.getContext('2d');
     if (framePanelCtx) {
       const ctx = framePanelCtx;
@@ -497,9 +547,45 @@ export class Renin {
       ctx.fillText('Frame', 16, canvas.height / 2);
     }
     this.framePanelTexture.needsUpdate = true;
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
+      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
+    }
   }
 
   render() {
+    const time = performance.now();
+    this.performancePanel.getMaterial().uniforms.renderTimesGPU.value = this.renderTimesGPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesGPUIndex.value = this.renderTimesGPUIndex;
+    this.performancePanel.getMaterial().needsUpdate = true;
+
+    const context = this.renderer.getContext() as WebGL2RenderingContext;
+    const extension = context.getExtension('EXT_disjoint_timer_query_webgl2');
+    if (this.query) {
+      const available = context.getQueryParameter(this.query, context.QUERY_RESULT_AVAILABLE);
+
+      if (available) {
+        const elapsedNanos = context.getQueryParameter(this.query, context.QUERY_RESULT);
+        this.renderTimesGPU[this.renderTimesGPUIndex] = elapsedNanos / 1_000_000;
+        this.renderTimesGPUIndex = (this.renderTimesGPUIndex + 1) % this.renderTimesGPU.length;
+        this.query = context.createQuery();
+        if (this.query) {
+          context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
+          this.queryIsActive = true;
+        }
+      } else {
+        console.log('missed query!');
+      }
+    } else {
+      this.query = context.createQuery();
+      if (this.query) {
+        context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
+        this.queryIsActive = true;
+      }
+    }
+
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(this.frame, this.renderer, this);
     this.screen.setTexture(this.screenRenderTarget.texture, true);
@@ -510,6 +596,25 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(null);
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
+      this.renderTimesCPUIndex = (this.renderTimesCPUIndex + 1) % this.renderTimesCPU.length;
+    }
+    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
+    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
+    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
+    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+
     this.renderer.render(this.scene, this.camera);
+
+    if (this.query && this.queryIsActive) {
+      context.endQuery(extension.TIME_ELAPSED_EXT);
+      this.queryIsActive = false;
+    }
   }
 }
