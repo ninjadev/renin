@@ -11,6 +11,7 @@ export const renin = new Renin({
     beatOffset: 4,
   },
   root: new Add(),
+  productionMode: import.meta.env.PROD,
 });
 
 renin.loop();

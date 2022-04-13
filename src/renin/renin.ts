@@ -36,6 +36,7 @@ export interface Options {
     beatOffset: number;
   };
   root: ReninNode;
+  productionMode: boolean;
 }
 
 export class Renin {
@@ -427,6 +428,9 @@ export class Renin {
   }
 
   uiUpdate() {
+    if (this.options.productionMode) {
+      return;
+    }
     const time = performance.now();
     this.fullscreenAnimation.update(this.uiTime);
     this.screen.setSize(
@@ -498,6 +502,11 @@ export class Renin {
   }
 
   render() {
+    if (this.options.productionMode) {
+      this.renderer.setRenderTarget(null);
+      this.root._render(this.frame, this.renderer, this);
+      return;
+    }
     const time = performance.now();
     this.performancePanel.getMaterial().uniforms.renderTimesGPU.value = this.renderTimesGPU;
     this.performancePanel.getMaterial().uniforms.renderTimesGPUIndex.value = this.renderTimesGPUIndex;
