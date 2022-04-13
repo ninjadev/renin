@@ -8,7 +8,7 @@ import {
   ShaderMaterial,
   Texture,
 } from 'three';
-import { defaultVertexShader } from './renin';
+import { defaultVertexShader } from './../renin';
 import shadowShader from './shadowShader.glsl';
 
 interface UIBoxOptions<MaterialType> {

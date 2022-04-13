@@ -7,20 +7,20 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { AudioBar } from './AudioBar';
+import { AudioBar } from './ui/AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
-import { lerp } from '../interpolations';
-import { colors } from './colors';
+import { lerp } from './interpolations';
+import { colors } from './ui/colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
-import { registerErrorOverlay } from './error';
+import { registerErrorOverlay } from './ui/error';
 import { Music } from './music';
-import { UIAnimation } from './animation';
-import { UIBox } from './uibox';
-import screenShader from './screenShader.glsl';
-import performancePanelShader from './performancePanel.glsl';
-import { thirdsOverlayTexture } from './thirdsOverlay';
+import { UIAnimation } from './ui/UIAnimation';
+import { UIBox } from './ui/UIBox';
+import screenShader from './ui/screenShader.glsl';
+import performancePanelShader from './ui/performancePanel.glsl';
+import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 
 export const defaultVertexShader = defaultVert;
 

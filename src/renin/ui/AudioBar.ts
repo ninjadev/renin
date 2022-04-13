@@ -10,11 +10,11 @@ import {
   BoxBufferGeometry,
 } from 'three';
 import { colors } from './colors';
-import { Music } from './music';
-import { defaultVertexShader, Options, Renin } from './renin';
-import { ReninNode } from './ReninNode';
-import { UIBox } from './uibox';
-import { getWindowHeight, getWindowWidth, gradientCanvas } from './utils';
+import { Music } from '../music';
+import { defaultVertexShader, Options, Renin } from '../renin';
+import { ReninNode } from '../ReninNode';
+import { UIBox } from './UIBox';
+import { getWindowHeight, getWindowWidth, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
 
