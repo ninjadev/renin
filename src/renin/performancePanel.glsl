@@ -101,7 +101,7 @@ void main() {
     color = mix(color, sky_500, isBarUpdate);
     color = mix(color, emerald_500, isBarUIUpdate);
     color = mix(color, rose_500, isBarCPU * isAboveLimitBottom);
-    color = mix(color, fuschia_500, isBarMemory);
+    color = mix(color, mix(fuschia_500, color, 0.4), isBarMemory);
     color = mix(color, fuschia_900, isBarMemoryFull);
 
 

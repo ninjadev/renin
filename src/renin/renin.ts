@@ -508,13 +508,6 @@ export class Renin {
       this.updateTimes[this.updateTimesIndex] = dt;
       this.updateTimesIndex = (this.updateTimesIndex + 1) % this.updateTimes.length;
     }
-
-    try {
-      this.memoryPercentages[this.memoryPercentagesIndex] = performance.memory.usedJSHeapSize;
-      this.memoryPercentagesIndex = (this.memoryPercentagesIndex + 1) % this.memoryPercentages.length;
-    } catch {
-      /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
-    }
   }
 
   uiUpdate() {
@@ -640,6 +633,13 @@ export class Renin {
     //@ts-expect-error
     this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+
+    try {
+      this.memoryPercentages[this.memoryPercentagesIndex] = performance.memory.usedJSHeapSize;
+      this.memoryPercentagesIndex = (this.memoryPercentagesIndex + 1) % this.memoryPercentages.length;
+    } catch {
+      /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
+    }
 
     this.renderer.render(this.scene, this.camera);
 
