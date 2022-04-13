@@ -1,9 +1,6 @@
 import {
-  BoxGeometry,
   CanvasTexture,
   Color,
-  Mesh,
-  MeshBasicMaterial,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
@@ -86,8 +83,6 @@ export class Renin {
         updateTimesIndex: { value: 0 },
         uiUpdateTimes: { value: [] },
         uiUpdateTimesIndex: { value: 0 },
-        memoryPercentages: { value: [] },
-        memoryPercentagesIndex: { value: 0 },
         memoryPercentages: { value: [] },
         memoryPercentagesIndex: { value: 0 },
         totalJSHeapSize: { value: 0 },
@@ -554,6 +549,7 @@ export class Renin {
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
 
     try {
+      //@ts-expect-error
       this.memoryPercentages[this.memoryPercentagesIndex] = performance.memory.usedJSHeapSize;
       this.memoryPercentagesIndex = (this.memoryPercentagesIndex + 1) % this.memoryPercentages.length;
     } catch {
