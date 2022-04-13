@@ -7,6 +7,7 @@ import {
   Texture,
   RepeatWrapping,
   ShaderMaterial,
+  BoxBufferGeometry,
 } from 'three';
 import { colors } from './colors';
 import { Music } from './music';
@@ -19,6 +20,19 @@ import { lerp } from '../interpolations';
 
 export const barHeight = 48;
 const glowSize = 12;
+
+const boxBufferGeometry = new BoxBufferGeometry();
+
+const uiboxStore: { [key: string]: UIBox } = {};
+const getUIBox = (name: string) => {
+  if (name in uiboxStore) {
+    return uiboxStore[name];
+  }
+  const box = new UIBox({ shadowSize: 8, shadowOpacity: 0.06 });
+  uiboxStore[name] = box;
+  box.setTexture(getNodeTexture(name));
+  return box;
+};
 
 const fallbackTexture = new Texture();
 const store: { [key: string]: Texture } = {};
@@ -120,7 +134,6 @@ export class AudioBar {
     this.audioTrack.position.z = 10;
     this.audioTrack.position.x = 16 + audioProgress * (this.width - 32) - this.width / 2 - (glowSize / 2) * scale;
 
-    const geometry = new BoxGeometry();
     for (const child of this.nodeContainer.children) {
       this.nodeContainer.remove(child);
     }
@@ -136,8 +149,7 @@ export class AudioBar {
           recurse(child, depth + ++i, startFrame, endFrame);
         }
       }
-      const box = new UIBox({ shadowSize: 8, shadowOpacity: 0.06 });
-      box.setTexture(getNodeTexture(node.constructor.name));
+      const box = getUIBox(node.constructor.name);
       const size = (endFrame - startFrame) / 60 / renin.music.getDuration();
       box.setSize(size * (this.width - 32), 24);
       box.object3d.position.x =
@@ -152,7 +164,7 @@ export class AudioBar {
 
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
-        const preview = new Mesh(geometry, new MeshBasicMaterial({ map: renderTarget.texture }));
+        const preview = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ map: renderTarget.texture }));
         preview.position.z = 5;
         preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - 16;
         preview.position.y = box.object3d.position.y;
@@ -289,7 +301,7 @@ export class AudioBar {
     this.audioBar.setSize(1, barHeight);
     this.obj.add(this.audioBar.object3d);
     this.audioTrack = new Mesh(
-      new BoxGeometry(),
+      boxBufferGeometry,
       new MeshBasicMaterial({
         map: new CanvasTexture(gradientCanvas),
         color: colors.green._500,
@@ -303,19 +315,19 @@ export class AudioBar {
       this.audioTrack.material.map.repeat.set(-1, 1);
       this.audioTrack.material.map.wrapS = RepeatWrapping;
     }
-    const line = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: colors.green._500 }));
+    const line = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ color: colors.green._500 }));
     line.position.x = 0.5;
     line.scale.x = 2 / glowSize;
     this.audioTrack.add(line);
     this.cuePoints = [
       new Mesh(
-        new BoxGeometry(),
+        boxBufferGeometry,
         new MeshBasicMaterial({
           color: colors.orange._500,
         })
       ),
       new Mesh(
-        new BoxGeometry(),
+        boxBufferGeometry,
         new MeshBasicMaterial({
           color: colors.orange._300,
         })

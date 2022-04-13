@@ -1,11 +1,10 @@
 import {
-  BoxGeometry,
+  BoxBufferGeometry,
   Material,
   Mesh,
   MeshBasicMaterial,
   Object3D,
   RawShaderMaterial,
-  RepeatWrapping,
   ShaderMaterial,
   Texture,
 } from 'three';
@@ -18,10 +17,12 @@ interface UIBoxOptions<MaterialType> {
   customMaterial?: MaterialType;
 }
 
+const geometry = new BoxBufferGeometry();
+
 export class UIBox<MaterialType extends Material = MeshBasicMaterial> {
   object3d = new Object3D();
-  private mesh: Mesh<BoxGeometry, MaterialType>;
-  private shadow: Mesh<BoxGeometry, RawShaderMaterial>;
+  private mesh: Mesh<BoxBufferGeometry, MaterialType>;
+  private shadow: Mesh<BoxBufferGeometry, RawShaderMaterial>;
   options: UIBoxOptions<MaterialType>;
 
   constructor(options: Partial<UIBoxOptions<MaterialType>>) {
@@ -31,10 +32,10 @@ export class UIBox<MaterialType extends Material = MeshBasicMaterial> {
       //@ts-ignore
       customMaterial: options.customMaterial ?? new MeshBasicMaterial({}),
     };
-    this.mesh = new Mesh(new BoxGeometry(), this.options.customMaterial);
+    this.mesh = new Mesh(geometry, this.options.customMaterial);
     this.object3d.add(this.mesh);
     this.shadow = new Mesh(
-      new BoxGeometry(),
+      geometry,
       new ShaderMaterial({
         fragmentShader: shadowShader,
         vertexShader: defaultVertexShader,

@@ -167,6 +167,12 @@ export class Renin {
         updateTimesIndex: { value: 0 },
         uiUpdateTimes: { value: [] },
         uiUpdateTimesIndex: { value: 0 },
+        memoryPercentages: { value: [] },
+        memoryPercentagesIndex: { value: 0 },
+        memoryPercentages: { value: [] },
+        memoryPercentagesIndex: { value: 0 },
+        totalJSHeapSize: { value: 0 },
+        jsHeapSizeLimit: { value: 0 },
       },
     }),
   });
@@ -186,6 +192,8 @@ export class Renin {
   updateTimesIndex: number = 0;
   uiUpdateTimes: number[] = [...new Array(128)].map(() => 0);
   uiUpdateTimesIndex: number = 0;
+  memoryPercentages: number[] = [...new Array(128)].map(() => 0);
+  memoryPercentagesIndex: number = 0;
   queryIsActive: boolean = false;
 
   constructor(options: Options) {
@@ -500,6 +508,13 @@ export class Renin {
       this.updateTimes[this.updateTimesIndex] = dt;
       this.updateTimesIndex = (this.updateTimesIndex + 1) % this.updateTimes.length;
     }
+
+    try {
+      this.memoryPercentages[this.memoryPercentagesIndex] = performance.memory.usedJSHeapSize;
+      this.memoryPercentagesIndex = (this.memoryPercentagesIndex + 1) % this.memoryPercentages.length;
+    } catch {
+      /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
+    }
   }
 
   uiUpdate() {
@@ -530,8 +545,8 @@ export class Renin {
     this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
     this.framePanel.object3d.position.z = 50;
 
-    this.performancePanel.setSize(640, 360);
-    this.performancePanel.object3d.position.x = getWindowWidth() / 2 - 16 - 640 - 16 - 640 / 2;
+    this.performancePanel.setSize(360, 360);
+    this.performancePanel.object3d.position.x = getWindowWidth() / 2 - 16 - 640 - 16 - 360 / 2;
     this.performancePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 360 / 2;
     this.performancePanel.object3d.position.z = 50;
 
@@ -618,6 +633,12 @@ export class Renin {
     this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
     this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
     this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
+    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
 
     this.renderer.render(this.scene, this.camera);
