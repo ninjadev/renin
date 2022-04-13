@@ -19,6 +19,8 @@ import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
 
 export const barHeight = 48;
+const boxHeight = 32;
+const boxPadding = 8;
 const glowSize = 12;
 
 const boxBufferGeometry = new BoxBufferGeometry();
@@ -41,7 +43,7 @@ const getNodeTexture = (name: string) => {
     return store[name];
   } else {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024 * 2;
+    canvas.width = 1024 * 1.5;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -151,13 +153,13 @@ export class AudioBar {
       }
       const box = getUIBox(node.constructor.name);
       const size = (endFrame - startFrame) / 60 / renin.music.getDuration();
-      box.setSize(size * (this.width - 32), 24);
+      box.setSize(size * (this.width - 32), boxHeight);
       box.object3d.position.x =
         (startFrame / 60 / renin.music.getDuration()) * (this.width - 32) -
         (this.width - 32) / 2 +
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
-      box.object3d.position.y = (24 + 8) * depth;
+      box.object3d.position.y = (boxHeight + boxPadding / 2) * depth;
       const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
       box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
@@ -165,11 +167,12 @@ export class AudioBar {
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
         const preview = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ map: renderTarget.texture }));
+        const width = (boxHeight / 9) * 16;
         preview.position.z = 5;
-        preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - 16;
+        preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - width / 2;
         preview.position.y = box.object3d.position.y;
-        preview.scale.x = 32;
-        preview.scale.y = 24;
+        preview.scale.x = width;
+        preview.scale.y = boxHeight;
         this.nodeContainer.add(preview);
       }
     };
@@ -179,7 +182,7 @@ export class AudioBar {
       renin.root.startFrame,
       renin.root.endFrame === -1 ? renin.music.getDuration() * 60 : renin.root.endFrame
     );
-    const trackHeight = barHeight + (deepestDepth + 1) * 32;
+    const trackHeight = barHeight + (deepestDepth + 1) * (boxHeight + boxPadding / 2) + boxPadding / 2;
     this.audioTrack.scale.y = trackHeight;
     this.audioTrack.position.y = -getWindowHeight() / 2 + trackHeight / 2 + 16;
     this.cuePoints[0].scale.y = trackHeight;
@@ -197,7 +200,7 @@ export class AudioBar {
     this.audioTrack.position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[0].position.y = -height / 2 + barHeight / 2 + 16;
     this.cuePoints[1].position.y = -height / 2 + barHeight / 2 + 16;
-    this.nodeContainer.position.y = -height / 2 + barHeight + 28 + 8;
+    this.nodeContainer.position.y = -height / 2 + barHeight + boxHeight + boxPadding;
     this.zoom(1);
   }
   async setMusic(music: Music, buffer: AudioBuffer, options: Options['music']) {
