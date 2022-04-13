@@ -24,6 +24,8 @@ import { thirdsOverlayTexture } from './thirdsOverlay';
 
 export const defaultVertexShader = defaultVert;
 
+const framePanelHeight = 24 * 5;
+
 registerErrorOverlay();
 
 export interface Options {
@@ -109,9 +111,11 @@ export class Renin {
   memoryPercentages: number[] = [...new Array(128)].map(() => 0);
   memoryPercentagesIndex: number = 0;
   queryIsActive: boolean = false;
+  options: Options;
 
   constructor(options: Options) {
     Renin.instance = this;
+    this.options = options;
     this.root = options.root;
 
     this.audioBar = new AudioBar(this);
@@ -327,8 +331,6 @@ export class Renin {
     this.camera.bottom = -height / 2;
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
-    this.framePanel.setSize(width, height);
-    this.performancePanel.setSize(width, height);
 
     if (this.isFullscreen) {
       this.screenRenderTarget.setSize(width, height);
@@ -447,9 +449,9 @@ export class Renin {
       return;
     }
 
-    this.framePanel.setSize(128 + 32, 48);
+    this.framePanel.setSize(128 + 32, framePanelHeight);
     this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
-    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
+    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - framePanelHeight / 2;
     this.framePanel.object3d.position.z = 50;
 
     this.performancePanel.setSize(360, 360);
@@ -461,19 +463,30 @@ export class Renin {
     if (framePanelCtx) {
       const ctx = framePanelCtx;
       const canvas = this.framePanelCanvas;
-      canvas.width = 128 + 32;
-      canvas.height = 48;
+      canvas.width = (128 + 32) * window.devicePixelRatio;
+      canvas.height = framePanelHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       ctx.fillStyle = colors.slate._500;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = '20px Barlow';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = colors.slate._100;
-      ctx.fillText('' + this.frame, canvas.width - 16, canvas.height / 2);
-      ctx.textAlign = 'left';
-      ctx.fillStyle = colors.slate._300;
+      const step = this.sync.stepForFrame(this.frame);
+      const items: [string, number][] = [
+        ['Bar', (step / this.options.music.subdivision / 4) | 0],
+        ['Beat', (step / this.options.music.subdivision) | 0],
+        ['Step', step],
+        ['Frame', this.frame],
+      ];
       ctx.font = '100 20px Barlow';
-      ctx.fillText('Frame', 16, canvas.height / 2);
+      ctx.translate(0, canvas.height / 4);
+      ctx.textBaseline = 'middle';
+      for (let [i, [label, value]] of items.entries()) {
+        const y = (i - (items.length - 1) / 2) * 24;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = colors.slate._100;
+        ctx.fillText('' + value, canvas.width / 2 - 16, y);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = colors.slate._300;
+        ctx.fillText(label, 16, y);
+      }
     }
     this.framePanelTexture.needsUpdate = true;
 
