@@ -6,3 +6,8 @@
   color: #2c3e50;
   margin-top: 60px;
 }
+
+@font-face {
+  font-family: 'Barlow';
+  src: url(./renin/fonts/Barlow-Regular.ttf) format('truetype');
+}
