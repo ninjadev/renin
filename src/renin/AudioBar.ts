@@ -160,14 +160,14 @@ export class AudioBar {
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
       box.object3d.position.y = (boxHeight + boxPadding / 2) * depth;
-      const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5;
+      const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5 * this.zoomAmount;
       box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
 
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
         const preview = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ map: renderTarget.texture }));
-        const width = (boxHeight / 9) * 16;
+        const width = ((boxHeight / 9) * 16) / this.zoomAmount;
         preview.position.z = 5;
         preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - width / 2;
         preview.position.y = box.object3d.position.y;
