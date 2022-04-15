@@ -1,5 +1,5 @@
 import { Renin } from './renin/renin';
-import './style.css';
+import './renin/style.css';
 import music from './music.ogg';
 import { Add } from './Add';
 
