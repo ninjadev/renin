@@ -1,111 +1,32 @@
 import {
-  BoxGeometry,
   CanvasTexture,
   Color,
-  Mesh,
-  MeshBasicMaterial,
   OrthographicCamera,
   Scene,
+  ShaderMaterial,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { AudioBar } from './AudioBar';
+import { AudioBar } from './ui/AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
-import { lerp } from '../interpolations';
-import { colors } from './colors';
+import { lerp } from './interpolations';
+import { colors } from './ui/colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
-import { registerErrorOverlay } from './error';
+import { registerErrorOverlay } from './ui/error';
 import { Music } from './music';
-import { UIAnimation } from './animation';
-import { UIBox } from './uibox';
+import { UIAnimation } from './ui/UIAnimation';
+import { UIBox } from './ui/UIBox';
+import screenShader from './ui/screenShader.glsl';
+import performancePanelShader from './ui/performancePanel.glsl';
+import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 
 export const defaultVertexShader = defaultVert;
 
+const framePanelHeight = 24 * 5;
+
 registerErrorOverlay();
-
-const thirdsOverlayCanvas = document.createElement('canvas');
-const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
-thirdsOverlayCanvas.width = 1920;
-thirdsOverlayCanvas.height = 1080;
-if (thirdsOverlayCtx) {
-  const canvas = thirdsOverlayCanvas;
-  const ctx = thirdsOverlayCtx;
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.beginPath();
-  ctx.strokeStyle = '#888';
-  ctx.fillStyle = '#888';
-  ctx.lineWidth = 3;
-
-  /* circle */
-  ctx.arc(1920 / 2, 1080 / 2, 1080 / 2, 0, Math.PI * 2);
-
-  /* thirds */
-  ctx.moveTo(w / 3, 0);
-  ctx.lineTo(w / 3, h);
-  ctx.moveTo((2 * w) / 3, 0);
-  ctx.lineTo((2 * w) / 3, h);
-  ctx.moveTo(0, h / 3);
-  ctx.lineTo(w, h / 3);
-  ctx.moveTo(0, (2 * h) / 3);
-  ctx.lineTo(w, (2 * h) / 3);
-
-  /* center */
-  ctx.moveTo(w / 2 - 8, h / 2);
-  ctx.lineTo(w / 2 + 8, h / 2);
-  ctx.moveTo(w / 2, h / 2 - 8);
-  ctx.lineTo(w / 2, h / 2 + 8);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#88888844';
-  ctx.moveTo(0, h / 2);
-  ctx.lineTo(w, h / 2);
-  ctx.moveTo(w / 2, 0);
-  ctx.lineTo(w / 2, h);
-  ctx.stroke();
-
-  /* golden ratio */
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#888';
-  ctx.beginPath();
-  ctx.setLineDash([16, 16]);
-  const phi = 1.61803398875;
-  ctx.moveTo(w / phi, 0);
-  ctx.lineTo(w / phi, h);
-  ctx.moveTo(w - w / phi, 0);
-  ctx.lineTo(w - w / phi, h);
-  ctx.moveTo(0, h / phi);
-  ctx.lineTo(w, h / phi);
-  ctx.moveTo(0, h - h / phi);
-  ctx.lineTo(w, h - h / phi);
-  ctx.stroke();
-
-  /* grid */
-  ctx.beginPath();
-  ctx.lineWidth = 0.5;
-  ctx.setLineDash([2, 6]);
-  ctx.strokeStyle = '#88888811';
-  const gridParts = 48;
-  for (let x = 1; x < gridParts; x++) {
-    for (let y = 1; y < (gridParts / 16) * 9; y++) {
-      ctx.moveTo((x / gridParts) * w, 0);
-      ctx.lineTo((x / gridParts) * w, h);
-      ctx.moveTo(0, (y / ((gridParts / 16) * 9)) * h);
-      ctx.lineTo(w, (y / ((gridParts / 16) * 9)) * h);
-    }
-  }
-  ctx.stroke();
-
-  ctx.font = '100 24px Barlow';
-  ctx.textAlign = 'left';
-  ctx.fillText('Golden ratio', 16, 656);
-  ctx.fillText('Thirds', 16, 710);
-}
-const thirdsOverlayTexture = new CanvasTexture(thirdsOverlayCanvas);
-thirdsOverlayTexture.needsUpdate = true;
 
 export interface Options {
   music: {
@@ -115,6 +36,7 @@ export interface Options {
     beatOffset: number;
   };
   root: ReninNode;
+  productionMode: boolean;
 }
 
 export class Renin {
@@ -130,10 +52,47 @@ export class Renin {
   dt: number = 0;
   cuePoints: number[] = [];
 
+  renderTimesCPU: number[] = [...new Array(128)].map(() => 0);
+  renderTimesCPUIndex: number = 0;
+  renderTimesGPU: number[] = [...new Array(128)].map(() => 0);
+  renderTimesGPUIndex: number = 0;
+
   renderer = new WebGLRenderer();
   demoRenderTarget = new WebGLRenderTarget(640, 360);
-  screen = new UIBox({ shadowSize: 16 });
+  screen = new UIBox({
+    shadowSize: 16,
+    customMaterial: new ShaderMaterial({
+      fragmentShader: screenShader,
+      vertexShader: defaultVertexShader,
+      uniforms: {
+        screen: { value: null },
+        thirdsOverlay: { value: null },
+        thirdsOverlayOpacity: { value: 0 },
+      },
+    }),
+  });
   framePanel = new UIBox({ shadowSize: 16 });
+  performancePanel = new UIBox({
+    shadowSize: 16,
+    customMaterial: new ShaderMaterial({
+      fragmentShader: performancePanelShader,
+      vertexShader: defaultVertexShader,
+      uniforms: {
+        renderTimesGPU: { value: [] },
+        renderTimesGPUIndex: { value: 0 },
+        renderTimesCPU: { value: [] },
+        renderTimesCPUIndex: { value: 0 },
+        updateTimes: { value: [] },
+        updateTimesIndex: { value: 0 },
+        uiUpdateTimes: { value: [] },
+        uiUpdateTimesIndex: { value: 0 },
+        memoryPercentages: { value: [] },
+        memoryPercentagesIndex: { value: 0 },
+        totalJSHeapSize: { value: 0 },
+        jsHeapSizeLimit: { value: 0 },
+      },
+    }),
+  });
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
@@ -143,12 +102,21 @@ export class Renin {
   uiOldTime: number = Date.now() / 1000;
   uiTime: number = Date.now() / 1000;
   uiDt: number = 0;
-  thirdsOverlay: Mesh<BoxGeometry, MeshBasicMaterial>;
   framePanelCanvas: HTMLCanvasElement;
   framePanelTexture: CanvasTexture;
+  query: WebGLQuery | null = null;
+  updateTimes: number[] = [...new Array(128)].map(() => 0);
+  updateTimesIndex: number = 0;
+  uiUpdateTimes: number[] = [...new Array(128)].map(() => 0);
+  uiUpdateTimesIndex: number = 0;
+  memoryPercentages: number[] = [...new Array(128)].map(() => 0);
+  memoryPercentagesIndex: number = 0;
+  queryIsActive: boolean = false;
+  options: Options;
 
   constructor(options: Options) {
     Renin.instance = this;
+    this.options = options;
     this.root = options.root;
 
     this.audioBar = new AudioBar(this);
@@ -163,6 +131,18 @@ export class Renin {
 
     this.sync = new Sync(options.music);
 
+    this.renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const deltaY = Math.max(0, 1 - e.deltaY / 1000);
+        this.audioBar.zoom(deltaY);
+      } else {
+        const deltaX = e.deltaX / 1000;
+        this.audioBar.pan(deltaX);
+        this.audioBar.zoom(1);
+      }
+    });
+
     this.renderer.domElement.addEventListener('click', (e) => {
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
@@ -175,10 +155,10 @@ export class Renin {
       if (e.clientY > screenHeight - audioBarHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
-          const clickedFrame = (x * this.music.getDuration() * 60) | 0;
+          const clickedFrame = this.audioBar.getClickedFrame(x);
           const period = this.sync.music.subdivision * (this.music.paused ? 1 : 4);
           const step = this.sync.stepForFrame(clickedFrame);
-          let newStep = ((step / period + 0.5) | 0) * period;
+          let newStep = (((step + this.sync.music.subdivision) / period) | 0) * period;
           this.jumpToFrame(this.sync.frameForStep(newStep));
         }
       }
@@ -186,6 +166,7 @@ export class Renin {
 
     this.scene.add(this.screen.object3d);
     this.scene.add(this.framePanel.object3d);
+    this.scene.add(this.performancePanel.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
@@ -193,14 +174,6 @@ export class Renin {
     this.framePanelCanvas = document.createElement('canvas');
     this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
     this.framePanel.setTexture(this.framePanelTexture, true);
-
-    this.thirdsOverlay = new Mesh(
-      new BoxGeometry(),
-      new MeshBasicMaterial({ map: thirdsOverlayTexture, transparent: true })
-    );
-    this.thirdsOverlay.visible = false;
-    this.thirdsOverlay.position.z = 1;
-    this.screen.object3d.add(this.thirdsOverlay);
 
     this.scene.add(this.audioBar.obj);
 
@@ -225,8 +198,12 @@ export class Renin {
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
+      if (e.key === 'm') {
+        this.music.setVolume(this.music.getVolume() === 1 ? 0 : 1);
+      }
       if (e.key === 'o') {
-        this.thirdsOverlay.visible = !this.thirdsOverlay.visible;
+        this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value =
+          this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value === 1 ? 0 : 1;
       }
       if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
@@ -238,6 +215,39 @@ export class Renin {
         } else {
           this.music.play();
         }
+      }
+      if (e.key === 'v') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current beat */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % this.sync.music.subdivision);
+        this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision)];
+      }
+      if (e.key === 'b') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current bar */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % (this.sync.music.subdivision * 4));
+        this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision * 4)];
+      }
+      if (e.key === 'n') {
+        if (this.cuePoints.length >= 2) {
+          this.cuePoints = [];
+          return;
+        }
+        /* repeat current 4 bars */
+        const step = this.sync.stepForFrame(this.frame);
+        const bar = step - (step % (this.sync.music.subdivision * 4 * 4));
+        this.cuePoints = [
+          this.sync.frameForStep(bar),
+          this.sync.frameForStep(bar + this.sync.music.subdivision * 4 * 4),
+        ];
       }
       if (e.key === 'g') {
         const step = this.sync.stepForFrame(this.frame);
@@ -365,6 +375,7 @@ export class Renin {
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
+    let needsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -378,6 +389,7 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
+      needsRender = true;
 
       if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
         this.jumpToFrame(this.cuePoints[0]);
@@ -386,8 +398,11 @@ export class Renin {
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
       this.uiUpdate();
+      needsRender = true;
     }
-    this.render();
+    if (needsRender) {
+      this.render();
+    }
   };
 
   jumpToFrame(frame: number) {
@@ -402,11 +417,21 @@ export class Renin {
   }
 
   update(frame: number) {
+    const time = performance.now();
     this.sync.update(frame);
     this.root._update(frame);
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.updateTimes[this.updateTimesIndex] = dt;
+      this.updateTimesIndex = (this.updateTimesIndex + 1) % this.updateTimes.length;
+    }
   }
 
   uiUpdate() {
+    if (this.options.productionMode) {
+      return;
+    }
+    const time = performance.now();
     this.fullscreenAnimation.update(this.uiTime);
     this.screen.setSize(
       lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
@@ -428,36 +453,96 @@ export class Renin {
       return;
     }
 
-    this.framePanel.setSize(128 + 32, 48);
+    this.framePanel.setSize(128 + 32, framePanelHeight);
     this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
-    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 48 / 2;
+    this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - framePanelHeight / 2;
     this.framePanel.object3d.position.z = 50;
+
+    this.performancePanel.setSize(360, 360);
+    this.performancePanel.object3d.position.x = getWindowWidth() / 2 - 16 - 640 - 16 - 360 / 2;
+    this.performancePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 360 / 2;
+    this.performancePanel.object3d.position.z = 50;
 
     const framePanelCtx = this.framePanelCanvas.getContext('2d');
     if (framePanelCtx) {
       const ctx = framePanelCtx;
       const canvas = this.framePanelCanvas;
-      canvas.width = 128 + 32;
-      canvas.height = 48;
+      canvas.width = (128 + 32) * window.devicePixelRatio;
+      canvas.height = framePanelHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       ctx.fillStyle = colors.slate._500;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = '20px Barlow';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = colors.slate._100;
-      ctx.fillText('' + this.frame, canvas.width - 16, canvas.height / 2);
-      ctx.textAlign = 'left';
-      ctx.fillStyle = colors.slate._300;
+      const step = this.sync.stepForFrame(this.frame);
+      const items: [string, number][] = [
+        ['Bar', (step / this.options.music.subdivision / 4) | 0],
+        ['Beat', (step / this.options.music.subdivision) | 0],
+        ['Step', step],
+        ['Frame', this.frame],
+      ];
       ctx.font = '100 20px Barlow';
-      ctx.fillText('Frame', 16, canvas.height / 2);
+      ctx.translate(0, canvas.height / 4);
+      ctx.textBaseline = 'middle';
+      for (let [i, [label, value]] of items.entries()) {
+        const y = (i - (items.length - 1) / 2) * 24;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = colors.slate._100;
+        ctx.fillText('' + value, canvas.width / 2 - 16, y);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = colors.slate._300;
+        ctx.fillText(label, 16, y);
+      }
     }
     this.framePanelTexture.needsUpdate = true;
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
+      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
+    }
   }
 
   render() {
+    if (this.options.productionMode) {
+      this.renderer.setRenderTarget(null);
+      this.root._render(this.frame, this.renderer, this);
+      return;
+    }
+    const time = performance.now();
+    this.performancePanel.getMaterial().uniforms.renderTimesGPU.value = this.renderTimesGPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesGPUIndex.value = this.renderTimesGPUIndex;
+    this.performancePanel.getMaterial().needsUpdate = true;
+
+    const context = this.renderer.getContext() as WebGL2RenderingContext;
+    const extension = context.getExtension('EXT_disjoint_timer_query_webgl2');
+    if (this.query) {
+      const available = context.getQueryParameter(this.query, context.QUERY_RESULT_AVAILABLE);
+
+      if (available) {
+        const elapsedNanos = context.getQueryParameter(this.query, context.QUERY_RESULT);
+        this.renderTimesGPU[this.renderTimesGPUIndex] = elapsedNanos / 1_000_000;
+        this.renderTimesGPUIndex = (this.renderTimesGPUIndex + 1) % this.renderTimesGPU.length;
+        this.query = context.createQuery();
+        if (this.query) {
+          context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
+          this.queryIsActive = true;
+        }
+      } else {
+        console.log('missed query!');
+      }
+    } else {
+      this.query = context.createQuery();
+      if (this.query) {
+        context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
+        this.queryIsActive = true;
+      }
+    }
+
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(this.frame, this.renderer, this);
-    this.screen.setTexture(this.screenRenderTarget.texture, true);
+    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
+    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
+    this.screenRenderTarget.texture.needsUpdate = true;
+    this.screen.getMaterial().uniformsNeedUpdate = true;
     this.scene.background = new Color(colors.gray._700);
 
     if (this.fullscreenAnimation.value < 0.9999) {
@@ -465,6 +550,39 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(null);
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
+      this.renderTimesCPUIndex = (this.renderTimesCPUIndex + 1) % this.renderTimesCPU.length;
+    }
+    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
+    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
+    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
+    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+
+    try {
+      //@ts-expect-error
+      this.memoryPercentages[this.memoryPercentagesIndex] = performance.memory.usedJSHeapSize;
+      this.memoryPercentagesIndex = (this.memoryPercentagesIndex + 1) % this.memoryPercentages.length;
+    } catch {
+      /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
+    }
+
     this.renderer.render(this.scene, this.camera);
+
+    if (this.query && this.queryIsActive) {
+      context.endQuery(extension.TIME_ELAPSED_EXT);
+      this.queryIsActive = false;
+    }
   }
 }
