@@ -1,6 +1,6 @@
 import { Renin } from './renin/renin';
 import './style.css';
-import music from './music.mp3';
+import music from './music.ogg';
 import { Add } from './Add';
 
 export const renin = new Renin({
