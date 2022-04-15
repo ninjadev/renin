@@ -10,6 +10,7 @@ uniform float beats;
 
 
 void main() {
+    float offsettedBeats = beats + beatOffset;
     int beat = int(vUv.x * beats);
 
     float pixel = 1. / width;
@@ -23,7 +24,7 @@ void main() {
     float barGroups = beats / 16.;
     float isStrongBeat = step(1., mod(vUv.x * width, width / beats * 4.));
     vec3 beatColor = mix(slate_400, slate_500, isStrongBeat);
-    color = mix(color, slate_700, float(0xcc) / 255. * step(1., mod(vUv.x * barGroups + (beatOffset / 16.) / barGroups, 2.)));
+    color = mix(color, slate_700, float(0xcc) / 255. * step(1., mod(-beatOffset / 16. + vUv.x * barGroups, 2.)));
     color = mix(color, slate_600, float(0xcc) / 255. * (1. - step(beatBins[beat], abs(vUv.y - 0.5))));
     color = mix(color, beatColor, float(0x88) / 255. * (1. - step(.5 + (1. - isStrongBeat), mod(vUv.x * width, width / beats))));
     gl_FragColor = vec4(color, 1.);

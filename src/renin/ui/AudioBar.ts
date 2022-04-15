@@ -225,6 +225,7 @@ export class AudioBar {
     audioBarShaderMaterial.uniforms.beatBins.value = beatBins;
     audioBarShaderMaterial.uniforms.bpm.value = options.bpm;
     audioBarShaderMaterial.uniforms.beats.value = beats;
+    audioBarShaderMaterial.uniforms.beatOffset.value = options.beatOffset;
     this.zoom(1);
   }
   audioTrack: Mesh<BoxGeometry, MeshBasicMaterial>;
@@ -245,6 +246,7 @@ export class AudioBar {
           beatBins: { value: [] },
           bpm: { value: 0 },
           beats: { value: 0 },
+          beatOffset: { value: 0 },
         },
         transparent: true,
       }),
