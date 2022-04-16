@@ -541,7 +541,6 @@ export class Renin {
     this.root._render(this.frame, this.renderer, this);
     this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
     this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
-    this.screenRenderTarget.texture.needsUpdate = true;
     this.screen.getMaterial().uniformsNeedUpdate = true;
     this.scene.background = new Color(colors.gray._700);
 
