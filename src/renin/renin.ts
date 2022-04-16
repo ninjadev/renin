@@ -527,7 +527,7 @@ export class Renin {
           this.queryIsActive = true;
         }
       } else {
-        console.log('missed query!');
+        // missed query!
       }
     } else {
       this.query = context.createQuery();
