@@ -376,7 +376,8 @@ export class Renin {
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
-    let needsRender = false;
+    let demoNeedsRender = false;
+    let uiNeedsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -390,7 +391,7 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
-      needsRender = true;
+      demoNeedsRender = true;
 
       if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
         this.jumpToFrame(this.cuePoints[0]);
@@ -399,10 +400,14 @@ export class Renin {
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
       this.uiUpdate();
-      needsRender = true;
+      uiNeedsRender = true;
     }
-    if (needsRender) {
+    if (demoNeedsRender) {
       this.render();
+    }
+    uiNeedsRender ||= demoNeedsRender;
+    if (uiNeedsRender) {
+      this.uiRender();
     }
   };
 
@@ -415,6 +420,7 @@ export class Renin {
     this.update(frame);
     this.uiUpdate();
     this.render();
+    this.uiRender();
   }
 
   update(frame: number) {
@@ -502,6 +508,38 @@ export class Renin {
     }
   }
 
+  uiRender() {
+    if (this.options.productionMode) {
+      return;
+    }
+
+    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
+    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
+    this.screen.getMaterial().uniformsNeedUpdate = true;
+    this.scene.background = new Color(colors.gray._700);
+
+    if (this.fullscreenAnimation.value < 0.9999) {
+      this.audioBar.render(this, this.cuePoints);
+    }
+
+    this.renderer.setRenderTarget(null);
+
+    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
+    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
+    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
+    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+    this.renderer.render(this.scene, this.camera);
+  }
+
   render() {
     if (this.options.productionMode) {
       this.renderer.setRenderTarget(null);
@@ -540,35 +578,11 @@ export class Renin {
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
     this.root._render(this.frame, this.renderer, this);
-    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
-    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
-    this.screen.getMaterial().uniformsNeedUpdate = true;
-    this.scene.background = new Color(colors.gray._700);
-
-    if (this.fullscreenAnimation.value < 0.9999) {
-      this.audioBar.render(this, this.cuePoints);
-    }
-
-    this.renderer.setRenderTarget(null);
-
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
       this.renderTimesCPUIndex = (this.renderTimesCPUIndex + 1) % this.renderTimesCPU.length;
     }
-    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
-    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
-    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
-    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
-    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
-    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
-    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
-    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
-    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
 
     try {
       //@ts-expect-error
@@ -577,9 +591,6 @@ export class Renin {
     } catch {
       /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
     }
-
-    this.renderer.render(this.scene, this.camera);
-
     if (this.query && this.queryIsActive) {
       context.endQuery(extension.TIME_ELAPSED_EXT);
       this.queryIsActive = false;
