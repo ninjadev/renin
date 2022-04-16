@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@types/three": "^0.133.0",
-    "three": "^0.133.1",
+    "three": "^0.139.2",
     "vite-plugin-inspect": "^0.3.8",
     "vite-plugin-string": "^1.0.1"
   }
