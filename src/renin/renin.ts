@@ -242,8 +242,9 @@ export class Renin {
           return;
         }
         /* repeat current 4 bars */
-        const step = this.sync.stepForFrame(this.frame);
-        const bar = step - (step % (this.sync.music.subdivision * 4 * 4));
+        const offset = this.options.music.beatOffset * this.sync.music.subdivision;
+        const step = this.sync.stepForFrame(this.frame) - offset;
+        const bar = step - (step % (this.sync.music.subdivision * 4 * 4)) + offset;
         this.cuePoints = [
           this.sync.frameForStep(bar),
           this.sync.frameForStep(bar + this.sync.music.subdivision * 4 * 4),
