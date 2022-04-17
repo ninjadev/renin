@@ -27,6 +27,7 @@ import { performancePanelTexture } from './ui/performancePanelTexture';
 
 export const defaultVertexShader = defaultVert;
 
+const framePanelWidth = 128 + 32;
 const framePanelHeight = 24 * 5;
 
 registerErrorOverlay();
@@ -56,6 +57,7 @@ export class Renin {
   time: number = 0;
   dt: number = 0;
   cuePoints: number[] = [];
+  uiNeedsRender: boolean = true;
 
   renderTimesCPU: number[] = [...new Array(128)].map(() => 0);
   renderTimesCPUIndex: number = 0;
@@ -148,6 +150,7 @@ export class Renin {
         this.audioBar.pan(deltaX);
         this.audioBar.zoom(1);
       }
+      this.uiNeedsRender = true;
     });
 
     this.renderer.domElement.addEventListener('click', (e) => {
@@ -200,11 +203,13 @@ export class Renin {
     this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener('resize', () => {
+      this.uiNeedsRender = true;
       this.music.audioContext.resume();
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
     document.addEventListener('keydown', (e) => {
+      this.uiNeedsRender = true;
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
@@ -391,7 +396,6 @@ export class Renin {
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
     let demoNeedsRender = false;
-    let uiNeedsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -413,14 +417,15 @@ export class Renin {
     }
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
-      uiNeedsRender = this.uiUpdate();
+      this.uiNeedsRender ||= this.uiUpdate();
     }
     if (demoNeedsRender) {
       this.render();
     }
-    uiNeedsRender ||= demoNeedsRender;
-    if (uiNeedsRender) {
+    this.uiNeedsRender ||= demoNeedsRender;
+    if (this.uiNeedsRender) {
       this.uiRender();
+      this.uiNeedsRender = false;
     }
   };
 
@@ -489,8 +494,8 @@ export class Renin {
       return;
     }
 
-    this.framePanel.setSize(128 + 32, framePanelHeight);
-    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
+    this.framePanel.setSize(framePanelWidth, framePanelHeight);
+    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + framePanelWidth / 2;
     this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - framePanelHeight / 2;
     this.framePanel.object3d.position.z = 50;
 
@@ -503,7 +508,7 @@ export class Renin {
     if (framePanelCtx) {
       const ctx = framePanelCtx;
       const canvas = this.framePanelCanvas;
-      canvas.width = (128 + 32) * window.devicePixelRatio;
+      canvas.width = framePanelWidth * window.devicePixelRatio;
       canvas.height = framePanelHeight * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       ctx.fillStyle = colors.slate._500;
@@ -515,7 +520,7 @@ export class Renin {
         ['Step', step],
         ['Frame', this.frame],
       ];
-      ctx.font = '100 20px Barlow';
+      ctx.font = '16px Barlow';
       ctx.translate(0, canvas.height / 4);
       ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {

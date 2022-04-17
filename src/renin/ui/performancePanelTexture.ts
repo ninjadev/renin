@@ -5,8 +5,9 @@ import '../style.css';
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 if (ctx) {
-  canvas.width = 360;
-  canvas.height = 360;
+  canvas.width = 360 * window.devicePixelRatio;
+  canvas.height = 360 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
   ctx.strokeStyle = '#232f40';
   ctx.font = '16px Barlow';
   ctx.textAlign = 'left';
@@ -28,9 +29,6 @@ if (ctx) {
 
   ctx.fillStyle = colors.sky._500;
   ctx.fillText('update', 8, top + gap);
-
-  ctx.fillStyle = colors.emerald._500;
-  ctx.fillText('uiUpdate', 8, top + gap * 2);
 }
 
 export const performancePanelTexture = new CanvasTexture(canvas);

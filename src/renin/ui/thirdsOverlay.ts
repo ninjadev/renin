@@ -1,4 +1,5 @@
 import { CanvasTexture } from 'three';
+import '../style.css';
 
 const thirdsOverlayCanvas = document.createElement('canvas');
 const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
@@ -74,7 +75,7 @@ if (thirdsOverlayCtx) {
   }
   ctx.stroke();
 
-  ctx.font = '100 24px Barlow';
+  ctx.font = '24px Barlow';
   ctx.textAlign = 'left';
   ctx.fillText('Golden ratio', 16, 656);
   ctx.fillText('Thirds', 16, 710);
