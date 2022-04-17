@@ -16,9 +16,9 @@ export const renin = new Renin({
   rendererOptions: {
     powerPreference: 'high-performance',
   },
+  toneMapping: ACESFilmicToneMapping,
 });
 
-renin.renderer.toneMapping = ACESFilmicToneMapping;
 renin.renderer.physicallyCorrectLights = true;
 
 renin.loop();

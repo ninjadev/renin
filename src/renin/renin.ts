@@ -1,6 +1,7 @@
 import {
   CanvasTexture,
   Color,
+  NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
@@ -39,6 +40,7 @@ export interface Options {
   root: ReninNode;
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
+  toneMapping: WebGLRenderer['toneMapping'];
 }
 
 export class Renin {
@@ -555,7 +557,9 @@ export class Renin {
   render() {
     if (this.options.productionMode) {
       this.renderer.setRenderTarget(null);
+      this.renderer.toneMapping = this.options.toneMapping;
       this.root._render(this.frame, this.renderer, this);
+      this.renderer.toneMapping = NoToneMapping;
       return;
     }
     const time = performance.now();
@@ -589,7 +593,9 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
+    this.renderer.toneMapping = this.options.toneMapping;
     this.root._render(this.frame, this.renderer, this);
+    this.renderer.toneMapping = NoToneMapping;
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
