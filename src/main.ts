@@ -19,6 +19,4 @@ export const renin = new Renin({
   toneMapping: ACESFilmicToneMapping,
 });
 
-renin.renderer.physicallyCorrectLights = true;
-
 renin.loop();

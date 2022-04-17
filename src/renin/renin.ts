@@ -123,6 +123,7 @@ export class Renin {
     this.options = options;
     this.root = options.root;
     this.renderer = new WebGLRenderer(options.rendererOptions);
+    this.renderer.physicallyCorrectLights = true;
     this.audioBar = new AudioBar(this);
 
     const body = document.getElementsByTagName('body')[0];
