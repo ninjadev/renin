@@ -186,6 +186,9 @@ export class Renin {
       this.music.setBuffer(buffer);
       //@ts-expect-error
       this.audioBar.setMusic(this.music, buffer, options.music);
+
+      /* Convenient way to rerender ui */
+      this.resize(getWindowWidth(), getWindowHeight());
     })();
 
     this.camera.position.z = 100;
@@ -345,6 +348,10 @@ export class Renin {
     }
 
     this.root._resize(width, height);
+
+    this.render();
+    this.uiUpdate();
+    this.uiRender();
   }
 
   /* for hmr */
@@ -401,8 +408,7 @@ export class Renin {
     }
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
-      this.uiUpdate();
-      uiNeedsRender = true;
+      uiNeedsRender = this.uiUpdate();
     }
     if (demoNeedsRender) {
       this.render();
@@ -438,10 +444,11 @@ export class Renin {
 
   uiUpdate() {
     if (this.options.productionMode) {
-      return;
+      return false;
     }
+    let needsRenderAfter = false;
     const time = performance.now();
-    this.fullscreenAnimation.update(this.uiTime);
+    needsRenderAfter ||= this.fullscreenAnimation.update(this.uiTime);
     this.screen.setSize(
       lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
       lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
@@ -459,6 +466,21 @@ export class Renin {
     this.screen.object3d.position.z = 90;
 
     if (this.fullscreenAnimation.value > 0.9999) {
+      return needsRenderAfter;
+    }
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      needsRenderAfter = true;
+      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
+      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
+    }
+
+    return needsRenderAfter;
+  }
+
+  uiRender() {
+    if (this.options.productionMode) {
       return;
     }
 
@@ -502,18 +524,6 @@ export class Renin {
       }
     }
     this.framePanelTexture.needsUpdate = true;
-
-    const dt = performance.now() - time;
-    if (!this.music.paused) {
-      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
-      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
-    }
-  }
-
-  uiRender() {
-    if (this.options.productionMode) {
-      return;
-    }
 
     this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
     this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;

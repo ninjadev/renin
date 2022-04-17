@@ -203,7 +203,7 @@ export class AudioBar {
     this.nodeContainer.position.y = -height / 2 + barHeight + boxHeight + boxPadding;
     this.zoom(1);
   }
-  async setMusic(music: Music, buffer: AudioBuffer, options: Options['music']) {
+  setMusic(music: Music, buffer: AudioBuffer, options: Options['music']) {
     this.music = music;
 
     const audioData = buffer.getChannelData(0);

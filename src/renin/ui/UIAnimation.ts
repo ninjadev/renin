@@ -15,7 +15,9 @@ export class UIAnimation {
   }
 
   update(time: number) {
+    const oldValue = this.value;
     const t = clamp(0, (time - this.startTime) / (this.endTime - this.startTime), 1);
     this.value = easeOut(this.startValue, this.endValue, t);
+    return oldValue !== this.value;
   }
 }
