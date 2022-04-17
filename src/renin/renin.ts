@@ -57,6 +57,7 @@ export class Renin {
   time: number = 0;
   dt: number = 0;
   cuePoints: number[] = [];
+  uiNeedsRender: boolean = true;
 
   renderTimesCPU: number[] = [...new Array(128)].map(() => 0);
   renderTimesCPUIndex: number = 0;
@@ -149,6 +150,7 @@ export class Renin {
         this.audioBar.pan(deltaX);
         this.audioBar.zoom(1);
       }
+      this.uiNeedsRender = true;
     });
 
     this.renderer.domElement.addEventListener('click', (e) => {
@@ -201,11 +203,13 @@ export class Renin {
     this.resize(getWindowWidth(), getWindowHeight());
 
     window.addEventListener('resize', () => {
+      this.uiNeedsRender = true;
       this.music.audioContext.resume();
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
     document.addEventListener('keydown', (e) => {
+      this.uiNeedsRender = true;
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
@@ -392,7 +396,6 @@ export class Renin {
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
     let demoNeedsRender = false;
-    let uiNeedsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -414,14 +417,15 @@ export class Renin {
     }
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
-      uiNeedsRender = this.uiUpdate();
+      this.uiNeedsRender ||= this.uiUpdate();
     }
     if (demoNeedsRender) {
       this.render();
     }
-    uiNeedsRender ||= demoNeedsRender;
-    if (uiNeedsRender) {
+    this.uiNeedsRender ||= demoNeedsRender;
+    if (this.uiNeedsRender) {
       this.uiRender();
+      this.uiNeedsRender = false;
     }
   };
 
