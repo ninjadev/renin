@@ -23,6 +23,7 @@ import { UIBox } from './ui/UIBox';
 import screenShader from './ui/screenShader.glsl';
 import performancePanelShader from './ui/performancePanel.glsl';
 import { thirdsOverlayTexture } from './ui/thirdsOverlay';
+import { performancePanelTexture } from './ui/performancePanelTexture';
 
 export const defaultVertexShader = defaultVert;
 
@@ -94,6 +95,7 @@ export class Renin {
         memoryPercentagesIndex: { value: 0 },
         totalJSHeapSize: { value: 0 },
         jsHeapSizeLimit: { value: 0 },
+        overlay: { value: null },
       },
     }),
   });
@@ -551,6 +553,7 @@ export class Renin {
     this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
     //@ts-expect-error
     this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    this.performancePanel.getMaterial().uniforms.overlay.value = performancePanelTexture;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
     this.renderer.render(this.scene, this.camera);
   }
