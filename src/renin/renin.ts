@@ -5,6 +5,7 @@ import {
   Scene,
   ShaderMaterial,
   WebGLRenderer,
+  WebGLRendererParameters,
   WebGLRenderTarget,
 } from 'three';
 import { AudioBar } from './ui/AudioBar';
@@ -37,6 +38,7 @@ export interface Options {
   };
   root: ReninNode;
   productionMode: boolean;
+  rendererOptions?: WebGLRendererParameters;
 }
 
 export class Renin {
@@ -57,7 +59,7 @@ export class Renin {
   renderTimesGPU: number[] = [...new Array(128)].map(() => 0);
   renderTimesGPUIndex: number = 0;
 
-  renderer = new WebGLRenderer();
+  renderer: WebGLRenderer;
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({
     shadowSize: 16,
@@ -118,7 +120,7 @@ export class Renin {
     Renin.instance = this;
     this.options = options;
     this.root = options.root;
-
+    this.renderer = new WebGLRenderer(options.rendererOptions);
     this.audioBar = new AudioBar(this);
 
     const body = document.getElementsByTagName('body')[0];
