@@ -1,4 +1,5 @@
 import { CanvasTexture } from 'three';
+import '../style.css';
 
 const thirdsOverlayCanvas = document.createElement('canvas');
 const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
