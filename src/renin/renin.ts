@@ -1,10 +1,12 @@
 import {
   CanvasTexture,
   Color,
+  NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
   WebGLRenderer,
+  WebGLRendererParameters,
   WebGLRenderTarget,
 } from 'three';
 import { AudioBar } from './ui/AudioBar';
@@ -21,6 +23,7 @@ import { UIBox } from './ui/UIBox';
 import screenShader from './ui/screenShader.glsl';
 import performancePanelShader from './ui/performancePanel.glsl';
 import { thirdsOverlayTexture } from './ui/thirdsOverlay';
+import { performancePanelTexture } from './ui/performancePanelTexture';
 
 export const defaultVertexShader = defaultVert;
 
@@ -37,6 +40,8 @@ export interface Options {
   };
   root: ReninNode;
   productionMode: boolean;
+  rendererOptions?: WebGLRendererParameters;
+  toneMapping: WebGLRenderer['toneMapping'];
 }
 
 export class Renin {
@@ -57,7 +62,7 @@ export class Renin {
   renderTimesGPU: number[] = [...new Array(128)].map(() => 0);
   renderTimesGPUIndex: number = 0;
 
-  renderer = new WebGLRenderer();
+  renderer: WebGLRenderer;
   demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({
     shadowSize: 16,
@@ -90,6 +95,7 @@ export class Renin {
         memoryPercentagesIndex: { value: 0 },
         totalJSHeapSize: { value: 0 },
         jsHeapSizeLimit: { value: 0 },
+        overlay: { value: null },
       },
     }),
   });
@@ -118,7 +124,8 @@ export class Renin {
     Renin.instance = this;
     this.options = options;
     this.root = options.root;
-
+    this.renderer = new WebGLRenderer(options.rendererOptions);
+    this.renderer.physicallyCorrectLights = true;
     this.audioBar = new AudioBar(this);
 
     const body = document.getElementsByTagName('body')[0];
@@ -184,6 +191,9 @@ export class Renin {
       this.music.setBuffer(buffer);
       //@ts-expect-error
       this.audioBar.setMusic(this.music, buffer, options.music);
+
+      /* Convenient way to rerender ui */
+      this.resize(getWindowWidth(), getWindowHeight());
     })();
 
     this.camera.position.z = 100;
@@ -343,6 +353,10 @@ export class Renin {
     }
 
     this.root._resize(width, height);
+
+    this.render();
+    this.uiUpdate();
+    this.uiRender();
   }
 
   /* for hmr */
@@ -376,7 +390,8 @@ export class Renin {
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
-    let needsRender = false;
+    let demoNeedsRender = false;
+    let uiNeedsRender = false;
     const frameLength = 1 / 60;
     if (this.dt >= 10 * frameLength) {
       /* give up and skip! */
@@ -390,7 +405,7 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
-      needsRender = true;
+      demoNeedsRender = true;
 
       if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
         this.jumpToFrame(this.cuePoints[0]);
@@ -398,11 +413,14 @@ export class Renin {
     }
     while (this.uiDt >= frameLength) {
       this.uiDt -= frameLength;
-      this.uiUpdate();
-      needsRender = true;
+      uiNeedsRender = this.uiUpdate();
     }
-    if (needsRender) {
+    if (demoNeedsRender) {
       this.render();
+    }
+    uiNeedsRender ||= demoNeedsRender;
+    if (uiNeedsRender) {
+      this.uiRender();
     }
   };
 
@@ -415,6 +433,7 @@ export class Renin {
     this.update(frame);
     this.uiUpdate();
     this.render();
+    this.uiRender();
   }
 
   update(frame: number) {
@@ -430,10 +449,11 @@ export class Renin {
 
   uiUpdate() {
     if (this.options.productionMode) {
-      return;
+      return false;
     }
+    let needsRenderAfter = false;
     const time = performance.now();
-    this.fullscreenAnimation.update(this.uiTime);
+    needsRenderAfter ||= this.fullscreenAnimation.update(this.uiTime);
     this.screen.setSize(
       lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
       lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
@@ -451,6 +471,21 @@ export class Renin {
     this.screen.object3d.position.z = 90;
 
     if (this.fullscreenAnimation.value > 0.9999) {
+      return needsRenderAfter;
+    }
+
+    const dt = performance.now() - time;
+    if (!this.music.paused) {
+      needsRenderAfter = true;
+      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
+      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
+    }
+
+    return needsRenderAfter;
+  }
+
+  uiRender() {
+    if (this.options.productionMode) {
       return;
     }
 
@@ -495,17 +530,40 @@ export class Renin {
     }
     this.framePanelTexture.needsUpdate = true;
 
-    const dt = performance.now() - time;
-    if (!this.music.paused) {
-      this.uiUpdateTimes[this.uiUpdateTimesIndex] = dt;
-      this.uiUpdateTimesIndex = (this.uiUpdateTimesIndex + 1) % this.uiUpdateTimes.length;
+    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
+    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
+    this.screen.getMaterial().uniformsNeedUpdate = true;
+    this.scene.background = new Color(colors.gray._700);
+
+    if (this.fullscreenAnimation.value < 0.9999) {
+      this.audioBar.render(this, this.cuePoints);
     }
+
+    this.renderer.setRenderTarget(null);
+
+    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
+    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
+    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
+    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
+    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
+    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
+    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
+    //@ts-expect-error
+    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    this.performancePanel.getMaterial().uniforms.overlay.value = performancePanelTexture;
+    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+    this.renderer.render(this.scene, this.camera);
   }
 
   render() {
     if (this.options.productionMode) {
       this.renderer.setRenderTarget(null);
+      this.renderer.toneMapping = this.options.toneMapping;
       this.root._render(this.frame, this.renderer, this);
+      this.renderer.toneMapping = NoToneMapping;
       return;
     }
     const time = performance.now();
@@ -539,36 +597,14 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
+    this.renderer.toneMapping = this.options.toneMapping;
     this.root._render(this.frame, this.renderer, this);
-    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
-    this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
-    this.screen.getMaterial().uniformsNeedUpdate = true;
-    this.scene.background = new Color(colors.gray._700);
-
-    if (this.fullscreenAnimation.value < 0.9999) {
-      this.audioBar.render(this, this.cuePoints);
-    }
-
-    this.renderer.setRenderTarget(null);
-
+    this.renderer.toneMapping = NoToneMapping;
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
       this.renderTimesCPUIndex = (this.renderTimesCPUIndex + 1) % this.renderTimesCPU.length;
     }
-    this.performancePanel.getMaterial().uniforms.renderTimesCPU.value = this.renderTimesCPU;
-    this.performancePanel.getMaterial().uniforms.renderTimesCPUIndex.value = this.renderTimesCPUIndex;
-    this.performancePanel.getMaterial().uniforms.updateTimes.value = this.updateTimes;
-    this.performancePanel.getMaterial().uniforms.updateTimesIndex.value = this.updateTimesIndex;
-    this.performancePanel.getMaterial().uniforms.uiUpdateTimes.value = this.uiUpdateTimes;
-    this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
-    this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
-    this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
-    this.performancePanel.getMaterial().uniformsNeedUpdate = true;
 
     try {
       //@ts-expect-error
@@ -577,9 +613,6 @@ export class Renin {
     } catch {
       /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
     }
-
-    this.renderer.render(this.scene, this.camera);
-
     if (this.query && this.queryIsActive) {
       context.endQuery(extension.TIME_ELAPSED_EXT);
       this.queryIsActive = false;

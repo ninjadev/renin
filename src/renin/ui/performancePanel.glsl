@@ -13,6 +13,7 @@ uniform float[RT_LENGTH] memoryPercentages;
 uniform int memoryPercentagesIndex;
 uniform float totalJSHeapSize;
 uniform float jsHeapSizeLimit;
+uniform sampler2D overlay;
 
 float modI(float a,float b) {
     float m=a-floor((a+0.5)/b)*b;
@@ -104,6 +105,8 @@ void main() {
     color = mix(color, mix(fuschia_500, color, 0.4), isBarMemory);
     color = mix(color, fuschia_900, isBarMemoryFull);
 
+    vec4 overlayColor = texture2D(overlay, vUv);
+    color = mix(color, overlayColor.rgb, overlayColor.a);
 
     gl_FragColor = vec4(color, 1.);
 }
