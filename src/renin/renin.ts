@@ -27,6 +27,7 @@ import { performancePanelTexture } from './ui/performancePanelTexture';
 
 export const defaultVertexShader = defaultVert;
 
+const framePanelWidth = 128 + 32;
 const framePanelHeight = 24 * 5;
 
 registerErrorOverlay();
@@ -489,8 +490,8 @@ export class Renin {
       return;
     }
 
-    this.framePanel.setSize(128 + 32, framePanelHeight);
-    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + (128 + 32) / 2;
+    this.framePanel.setSize(framePanelWidth, framePanelHeight);
+    this.framePanel.object3d.position.x = -getWindowWidth() / 2 + 16 + framePanelWidth / 2;
     this.framePanel.object3d.position.y = getWindowHeight() / 2 - 16 - framePanelHeight / 2;
     this.framePanel.object3d.position.z = 50;
 
@@ -503,7 +504,7 @@ export class Renin {
     if (framePanelCtx) {
       const ctx = framePanelCtx;
       const canvas = this.framePanelCanvas;
-      canvas.width = (128 + 32) * window.devicePixelRatio;
+      canvas.width = framePanelWidth * window.devicePixelRatio;
       canvas.height = framePanelHeight * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       ctx.fillStyle = colors.slate._500;
@@ -515,7 +516,7 @@ export class Renin {
         ['Step', step],
         ['Frame', this.frame],
       ];
-      ctx.font = '100 20px Barlow';
+      ctx.font = '16px Barlow';
       ctx.translate(0, canvas.height / 4);
       ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {

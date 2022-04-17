@@ -19,7 +19,7 @@ import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
 
 export const barHeight = 48;
-const boxHeight = 32;
+const boxHeight = 40;
 const boxPadding = 8;
 const glowSize = 12;
 
@@ -43,19 +43,20 @@ const getNodeTexture = (name: string) => {
     return store[name];
   } else {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024 * 1.5;
-    canvas.height = 128;
+    canvas.width = 1024 * window.devicePixelRatio;
+    canvas.height = boxHeight * window.devicePixelRatio;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       return fallbackTexture;
     }
     ctx.fillStyle = colors.slate._500;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = colors.slate._100;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.fillStyle = colors.slate._300;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
-    ctx.font = '60px Barlow';
-    ctx.fillText(name, 32, canvas.height / 2);
+    ctx.font = '16px Barlow';
+    ctx.fillText(name, 16, boxHeight / 2);
     const texture = new CanvasTexture(canvas);
     store[name] = texture;
     return texture;
@@ -159,8 +160,8 @@ export class AudioBar {
         (this.width - 32) / 2 +
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
-      box.object3d.position.y = (boxHeight + boxPadding / 2) * depth;
-      const windowSizeIndependantMagicScaleNumber = (getWindowWidth() / 1024) * 2.5 * this.zoomAmount;
+      box.object3d.position.y = (boxHeight + boxPadding) * depth;
+      const windowSizeIndependantMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
       box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
 
@@ -182,7 +183,7 @@ export class AudioBar {
       renin.root.startFrame,
       renin.root.endFrame === -1 ? renin.music.getDuration() * 60 : renin.root.endFrame
     );
-    const trackHeight = barHeight + (deepestDepth + 1) * (boxHeight + boxPadding / 2) + boxPadding / 2;
+    const trackHeight = barHeight + (deepestDepth + 1) * (boxHeight + boxPadding) + boxPadding;
     this.audioTrack.scale.y = trackHeight;
     this.audioTrack.position.y = -getWindowHeight() / 2 + trackHeight / 2 + 16;
     this.cuePoints[0].scale.y = trackHeight;
