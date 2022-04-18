@@ -1,4 +1,4 @@
-import { defaultVertexShader } from 'renin/lib/renin';
+import { defaultVertexShader, Renin } from 'renin/lib/renin';
 import { ReninNode } from 'renin/lib/ReninNode';
 import {
   AmbientLight,
