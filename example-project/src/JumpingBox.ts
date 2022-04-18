@@ -72,7 +72,7 @@ export class JumpingBox extends ReninNode {
   }
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
-    let angle = ((frame * renin.sync.music.bpm) / 60 / 60 + 0.5) % 4;
+    let angle = ((frame * renin.sync.music.bpm) / 60 / 60) % 4;
     angle = (angle | 0) + easeIn(0, 1, angle % 1) ** 2;
     angle *= (Math.PI * 2) / 4;
     const radius = 1.5;
