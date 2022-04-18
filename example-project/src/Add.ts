@@ -3,7 +3,7 @@ import addFragmentShader from './add.glsl';
 import { SpinningCube } from './SpinningCube';
 import { JumpingBox } from './JumpingBox';
 import { ReninNode } from 'renin/lib/ReninNode';
-import { defaultVertexShader } from 'renin/lib/renin';
+import { defaultVertexShader, Renin } from 'renin/lib/renin';
 import { children } from 'renin/lib/utils';
 
 export class Add extends ReninNode {
