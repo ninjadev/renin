@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, OrthographicCamera, Scene, ShaderMaterial, WebGLRenderer } from 'three';
+import { BoxGeometry, Mesh, OrthographicCamera, Scene, ShaderMaterial, WebGLRenderer, WebGLRenderTarget } from 'three';
 import addFragmentShader from './add.glsl';
 import { SpinningCube } from './SpinningCube';
 import { JumpingBox } from './JumpingBox';
@@ -6,10 +6,10 @@ import { ReninNode } from 'renin/lib/ReninNode';
 import { defaultVertexShader, Renin } from 'renin/lib/renin';
 import { children } from 'renin/lib/utils';
 
-export class Add extends ReninNode {
-  endFrame = 4000;
+export class SceneSwitcher extends ReninNode {
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
+  renderTarget = new WebGLRenderTarget(640, 360);
   screen = new Mesh(
     new BoxGeometry(2, 2, 2),
     new ShaderMaterial({
@@ -30,6 +30,9 @@ export class Add extends ReninNode {
     spinningcube: SpinningCube,
     jumpingbox: JumpingBox,
   });
+  public resize(width: number, height: number) {
+    this.renderTarget.setSize(width, height);
+  }
 
   constructor() {
     super();
@@ -47,6 +50,7 @@ export class Add extends ReninNode {
       ? this.children.jumpingbox.renderTarget.texture
       : null;
     this.screen.material.needsUpdate = true;
+    renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
 }
