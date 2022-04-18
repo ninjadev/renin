@@ -15,7 +15,7 @@ import {
 import plasma from './plasma.glsl';
 
 export class SpinningCube extends ReninNode {
-  startFrame = 1234;
+  startFrame = 3157;
   scene = new Scene();
   camera = new PerspectiveCamera();
   renderTarget = new WebGLRenderTarget(640, 360);

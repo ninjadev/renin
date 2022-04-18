@@ -34,7 +34,7 @@ export class PostFx extends ReninNode {
   }
 
   public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
-    this.screen.material.uniforms.time.value = frame / 60;
+    this.screen.material.uniforms.time.value = frame;
     this.screen.material.uniforms.tDiffuse.value = this.children.switcher.renderTarget.texture;
     this.screen.material.needsUpdate = true;
     renderer.render(this.scene, this.camera);
