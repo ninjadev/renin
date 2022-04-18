@@ -6,6 +6,7 @@ export class ReninNode {
   /* The frame range this node will be active. */
   startFrame: number = 0;
   endFrame: number = -1;
+  isActive: boolean = false;
 
   /* The children of this node. Children update and render before this
    * node, and this node will abe able to access public properties of
@@ -39,7 +40,8 @@ export class ReninNode {
 
   /* The actual update function. Subclasses don't need to override this. */
   public _update(frame: number) {
-    if (frame < this.startFrame || (frame >= this.endFrame && this.endFrame !== -1)) {
+    this.isActive = !(frame < this.startFrame || (frame >= this.endFrame && this.endFrame !== -1));
+    if (!this.isActive) {
       return;
     }
     if ('children' in this) {
