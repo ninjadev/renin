@@ -14,7 +14,7 @@ import { Music } from '../music';
 import { defaultVertexShader, Options, Renin } from '../renin';
 import { ReninNode } from '../ReninNode';
 import { UIBox } from './UIBox';
-import { getWindowHeight, getWindowWidth, gradientCanvas } from '../utils';
+import { getWindowHeight, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
 
