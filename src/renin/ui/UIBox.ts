@@ -19,6 +19,8 @@ interface UIBoxOptions<MaterialType> {
   customMaterial?: MaterialType;
 }
 
+const roundedRectangleCache: Record<string, BufferGeometry> = {};
+
 /* Adapted from https://discourse.threejs.org/t/roundedrectangle/28645 */
 export function makeRoundedRectangleBufferGeometry(
   width: number,
@@ -27,6 +29,11 @@ export function makeRoundedRectangleBufferGeometry(
   radiusY: number,
   smoothness: number
 ) {
+  const cacheKey = `${width}:${height}:${radiusX}:${radiusY}:{smoothness}`;
+  if (cacheKey in roundedRectangleCache) {
+    return roundedRectangleCache[cacheKey];
+  }
+
   // helper const's
   const wi = width / 2 - radiusX; // inner width
   const hi = height / 2 - radiusY; // inner height
@@ -106,6 +113,9 @@ export function makeRoundedRectangleBufferGeometry(
   geometry.setIndex(new BufferAttribute(new Uint32Array(indices), 1));
   geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
   geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
+
+  roundedRectangleCache[cacheKey] = geometry;
+
   return geometry;
 }
 
