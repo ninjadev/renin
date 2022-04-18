@@ -1,8 +1,7 @@
-import { Renin } from './renin/renin';
-import './renin/style.css';
 import music from './music.ogg';
-import { Add } from './Add';
 import { ACESFilmicToneMapping } from 'three';
+import { Renin } from 'renin/lib/renin';
+import { PostFx } from './PostFx';
 
 export const renin = new Renin({
   music: {
@@ -11,7 +10,7 @@ export const renin = new Renin({
     subdivision: 12,
     beatOffset: 4,
   },
-  root: new Add(),
+  root: new PostFx(),
   productionMode: import.meta.env.PROD,
   rendererOptions: {
     powerPreference: 'high-performance',

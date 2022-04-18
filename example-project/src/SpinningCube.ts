@@ -1,3 +1,5 @@
+import { defaultVertexShader, Renin } from 'renin/lib/renin';
+import { ReninNode } from 'renin/lib/ReninNode';
 import {
   AmbientLight,
   BoxGeometry,
@@ -10,11 +12,10 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { Renin, defaultVertexShader } from './renin/renin';
 import plasma from './plasma.glsl';
-import { ReninNode } from './renin/ReninNode';
 
-export class JumpingBox extends ReninNode {
+export class SpinningCube extends ReninNode {
+  startFrame = 3157;
   scene = new Scene();
   camera = new PerspectiveCamera();
   renderTarget = new WebGLRenderTarget(640, 360);
@@ -37,7 +38,6 @@ export class JumpingBox extends ReninNode {
     const dl = new DirectionalLight('red');
     dl.position.set(1, 1, 1);
     this.scene.add(dl);
-
     this.scene.add(this.camera);
     this.camera.position.z = 10;
     this.camera.fov = 22;
@@ -50,8 +50,8 @@ export class JumpingBox extends ReninNode {
   }
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
-    this.cube.position.x = 2;
-    this.cube.position.y = Math.sin(frame * 0.1) * 2;
+    this.cube.rotation.x = frame * 0.1;
+    this.cube.rotation.y = frame * 0.2;
     this.cube.scale.x = 2 - renin.sync.flash(frame, 24) ** 0.5;
 
     this.cube.material.uniforms.time.value = frame / 60;

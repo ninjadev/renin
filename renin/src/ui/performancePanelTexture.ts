@@ -1,6 +1,7 @@
 import { CanvasTexture } from 'three';
 import { colors } from './colors';
-import '../style.css';
+import { bootstrapCss } from './css';
+bootstrapCss();
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');

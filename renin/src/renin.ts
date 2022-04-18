@@ -25,6 +25,10 @@ import performancePanelShader from './ui/performancePanel.glsl';
 import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 import { performancePanelTexture } from './ui/performancePanelTexture';
 
+/* otherwise it won't be added to the build */
+export * as vite from './ui/vite';
+export * as ReninNode from './ReninNode';
+
 export const defaultVertexShader = defaultVert;
 
 const framePanelWidth = 128 + 32;
@@ -192,7 +196,6 @@ export class Renin {
       const data = await response.arrayBuffer();
       const buffer = await this.music.audioContext.decodeAudioData(data);
       this.music.setBuffer(buffer);
-      //@ts-expect-error
       this.audioBar.setMusic(this.music, buffer, options.music);
 
       /* Convenient way to rerender ui */

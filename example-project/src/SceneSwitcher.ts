@@ -1,15 +1,15 @@
-import { BoxGeometry, Mesh, OrthographicCamera, Scene, ShaderMaterial, WebGLRenderer } from 'three';
-import { Renin, defaultVertexShader } from './renin/renin';
+import { BoxGeometry, Mesh, OrthographicCamera, Scene, ShaderMaterial, WebGLRenderer, WebGLRenderTarget } from 'three';
 import addFragmentShader from './add.glsl';
 import { SpinningCube } from './SpinningCube';
 import { JumpingBox } from './JumpingBox';
-import { ReninNode } from './renin/ReninNode';
-import { children } from './renin/utils';
+import { ReninNode } from 'renin/lib/ReninNode';
+import { defaultVertexShader, Renin } from 'renin/lib/renin';
+import { children } from 'renin/lib/utils';
 
-export class Add extends ReninNode {
-  endFrame = 4000;
+export class SceneSwitcher extends ReninNode {
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
+  renderTarget = new WebGLRenderTarget(640, 360);
   screen = new Mesh(
     new BoxGeometry(2, 2, 2),
     new ShaderMaterial({
@@ -30,6 +30,9 @@ export class Add extends ReninNode {
     spinningcube: SpinningCube,
     jumpingbox: JumpingBox,
   });
+  public resize(width: number, height: number) {
+    this.renderTarget.setSize(width, height);
+  }
 
   constructor() {
     super();
@@ -40,9 +43,14 @@ export class Add extends ReninNode {
 
   public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
     this.screen.material.uniforms.time.value = frame / 60;
-    this.screen.material.uniforms.tA.value = this.children.spinningcube.renderTarget.texture;
-    this.screen.material.uniforms.tB.value = this.children.jumpingbox.renderTarget.texture;
+    this.screen.material.uniforms.tA.value = this.children.spinningcube.isActive
+      ? this.children.spinningcube.renderTarget.texture
+      : null;
+    this.screen.material.uniforms.tB.value = this.children.jumpingbox.isActive
+      ? this.children.jumpingbox.renderTarget.texture
+      : null;
     this.screen.material.needsUpdate = true;
+    renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
 }
