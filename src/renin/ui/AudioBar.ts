@@ -161,8 +161,8 @@ export class AudioBar {
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
       box.object3d.position.y = (boxHeight + boxPadding) * depth;
-      const windowSizeIndependantMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
-      box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
+      const windowSizeIndependentMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
+      box.getMaterial().map!.repeat.set(windowSizeIndependentMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
 
       if ((node as any).renderTarget || (node as any).screen) {
