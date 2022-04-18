@@ -13,7 +13,7 @@ import { colors } from './colors';
 import { Music } from '../music';
 import { defaultVertexShader, Options, Renin } from '../renin';
 import { ReninNode } from '../ReninNode';
-import { UIBox } from './UIBox';
+import { makeRoundedRectangleBufferGeometry, UIBox } from './UIBox';
 import { getWindowHeight, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
@@ -167,13 +167,17 @@ export class AudioBar {
 
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
-        const preview = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ map: renderTarget.texture }));
         const width = ((boxHeight / 9) * 16) / this.zoomAmount;
+        const height = boxHeight;
+        const preview = new Mesh(
+          makeRoundedRectangleBufferGeometry(1, 1, 4 / width, 4 / height, 32),
+          new MeshBasicMaterial({ map: renderTarget.texture })
+        );
         preview.position.z = 5;
         preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - width / 2;
         preview.position.y = box.object3d.position.y;
         preview.scale.x = width;
-        preview.scale.y = boxHeight;
+        preview.scale.y = height;
         this.nodeContainer.add(preview);
       }
     };

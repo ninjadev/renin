@@ -20,7 +20,7 @@ interface UIBoxOptions<MaterialType> {
 }
 
 /* Adapted from https://discourse.threejs.org/t/roundedrectangle/28645 */
-function makeRoundedRectangleBufferGeometry(
+export function makeRoundedRectangleBufferGeometry(
   width: number,
   height: number,
   radiusX: number,
