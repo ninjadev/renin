@@ -1,0 +1,23 @@
+{
+  "name": "renin",
+  "version": "1.0.0",
+  "module": "lib/renin.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "rm -rf lib && rollup -c"
+  },
+  "devDependencies": {
+    "@betit/rollup-plugin-rename-extensions": "^0.1.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@types/three": "^0.139.0",
+    "rollup": "^2.70.2",
+    "rollup-plugin-import-css": "^3.0.3",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-string": "^3.0.0",
+    "tslib": "^2.3.1",
+    "typescript": "^4.6.3",
+    "vite": "^2.9.5"
+  }
+}
