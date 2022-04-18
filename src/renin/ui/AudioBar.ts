@@ -13,8 +13,8 @@ import { colors } from './colors';
 import { Music } from '../music';
 import { defaultVertexShader, Options, Renin } from '../renin';
 import { ReninNode } from '../ReninNode';
-import { UIBox } from './UIBox';
-import { getWindowHeight, getWindowWidth, gradientCanvas } from '../utils';
+import { makeRoundedRectangleBufferGeometry, UIBox } from './UIBox';
+import { getWindowHeight, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
 
@@ -161,19 +161,23 @@ export class AudioBar {
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
       box.object3d.position.y = (boxHeight + boxPadding) * depth;
-      const windowSizeIndependantMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
-      box.getMaterial().map!.repeat.set(windowSizeIndependantMagicScaleNumber * size, 1);
+      const windowSizeIndependentMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
+      box.getMaterial().map!.repeat.set(windowSizeIndependentMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
 
       if ((node as any).renderTarget || (node as any).screen) {
         const renderTarget = (node as any).renderTarget || this.renin.screenRenderTarget;
-        const preview = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ map: renderTarget.texture }));
         const width = ((boxHeight / 9) * 16) / this.zoomAmount;
+        const height = boxHeight;
+        const preview = new Mesh(
+          makeRoundedRectangleBufferGeometry(1, 1, 4 / width, 4 / height, 32),
+          new MeshBasicMaterial({ map: renderTarget.texture })
+        );
         preview.position.z = 5;
         preview.position.x = box.object3d.position.x + box.object3d.scale.x / 2 - width / 2;
         preview.position.y = box.object3d.position.y;
         preview.scale.x = width;
-        preview.scale.y = boxHeight;
+        preview.scale.y = height;
         this.nodeContainer.add(preview);
       }
     };
