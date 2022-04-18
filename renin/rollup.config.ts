@@ -5,6 +5,7 @@ import css from "rollup-plugin-import-css";
 export default {
   treeshake: false,
   input: "src/renin.ts",
+  external: ["three"],
   output: {
     dir: "lib",
     entryFileNames: "[name].mjs",
