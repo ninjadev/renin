@@ -12,6 +12,7 @@
     "@betit/rollup-plugin-rename-extensions": "^0.1.0",
     "@rollup/plugin-typescript": "^8.3.2",
     "@types/three": "^0.139.0",
+    "prettier": "^2.6.2",
     "rollup": "^2.70.2",
     "rollup-plugin-import-css": "^3.0.3",
     "rollup-plugin-sourcemaps": "^0.6.3",

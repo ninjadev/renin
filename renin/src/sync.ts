@@ -1,4 +1,4 @@
-import { Options } from "./renin";
+import { Options } from './renin';
 
 export class Sync {
   step = 0;
@@ -6,7 +6,7 @@ export class Sync {
   readonly framesPerSubdivision: number;
   music: { src: string; bpm: number; subdivision: number };
 
-  constructor(music: Options["music"]) {
+  constructor(music: Options['music']) {
     const stepsPerMinute = music.bpm * music.subdivision;
     const stepsPerSecond = stepsPerMinute / 60;
     const framesPerSecond = 60;

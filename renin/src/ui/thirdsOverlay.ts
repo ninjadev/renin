@@ -1,9 +1,9 @@
-import { CanvasTexture } from "three";
-import { bootstrapCss } from "./css";
+import { CanvasTexture } from 'three';
+import { bootstrapCss } from './css';
 bootstrapCss();
 
-const thirdsOverlayCanvas = document.createElement("canvas");
-const thirdsOverlayCtx = thirdsOverlayCanvas.getContext("2d");
+const thirdsOverlayCanvas = document.createElement('canvas');
+const thirdsOverlayCtx = thirdsOverlayCanvas.getContext('2d');
 thirdsOverlayCanvas.width = 1920;
 thirdsOverlayCanvas.height = 1080;
 if (thirdsOverlayCtx) {
@@ -12,8 +12,8 @@ if (thirdsOverlayCtx) {
   const w = canvas.width;
   const h = canvas.height;
   ctx.beginPath();
-  ctx.strokeStyle = "#888";
-  ctx.fillStyle = "#888";
+  ctx.strokeStyle = '#888';
+  ctx.fillStyle = '#888';
   ctx.lineWidth = 3;
 
   /* circle */
@@ -37,7 +37,7 @@ if (thirdsOverlayCtx) {
   ctx.stroke();
   ctx.beginPath();
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#88888844";
+  ctx.strokeStyle = '#88888844';
   ctx.moveTo(0, h / 2);
   ctx.lineTo(w, h / 2);
   ctx.moveTo(w / 2, 0);
@@ -46,7 +46,7 @@ if (thirdsOverlayCtx) {
 
   /* golden ratio */
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#888";
+  ctx.strokeStyle = '#888';
   ctx.beginPath();
   ctx.setLineDash([16, 16]);
   const phi = 1.61803398875;
@@ -64,7 +64,7 @@ if (thirdsOverlayCtx) {
   ctx.beginPath();
   ctx.lineWidth = 0.5;
   ctx.setLineDash([2, 6]);
-  ctx.strokeStyle = "#88888811";
+  ctx.strokeStyle = '#88888811';
   const gridParts = 48;
   for (let x = 1; x < gridParts; x++) {
     for (let y = 1; y < (gridParts / 16) * 9; y++) {
@@ -76,10 +76,10 @@ if (thirdsOverlayCtx) {
   }
   ctx.stroke();
 
-  ctx.font = "24px Barlow";
-  ctx.textAlign = "left";
-  ctx.fillText("Golden ratio", 16, 656);
-  ctx.fillText("Thirds", 16, 710);
+  ctx.font = '24px Barlow';
+  ctx.textAlign = 'left';
+  ctx.fillText('Golden ratio', 16, 656);
+  ctx.fillText('Thirds', 16, 710);
 }
 export const thirdsOverlayTexture = new CanvasTexture(thirdsOverlayCanvas);
 thirdsOverlayTexture.needsUpdate = true;

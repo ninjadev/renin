@@ -1,8 +1,8 @@
 export default function reninPlugin() {
   return {
-    name: "renin-plugin",
+    name: 'renin-plugin',
     transform(src: string, filepath: string) {
-      if (filepath.endsWith(".ts") && filepath.indexOf("/src/renin/") === -1) {
+      if (filepath.endsWith('.ts') && filepath.indexOf('/src/renin/') === -1) {
         const fastNDirtyNodeClassNameParser = /export class ([^ ]+)/;
         const match = fastNDirtyNodeClassNameParser.exec(src);
         if (match) {

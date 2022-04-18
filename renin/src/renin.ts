@@ -8,26 +8,26 @@ import {
   WebGLRenderer,
   WebGLRendererParameters,
   WebGLRenderTarget,
-} from "three";
-import { AudioBar } from "./ui/AudioBar";
-import { Sync } from "./sync";
-import defaultVert from "./default.vert.glsl";
-import { lerp } from "./interpolations";
-import { colors } from "./ui/colors";
-import { getWindowHeight, getWindowWidth } from "./utils";
-import { ReninNode } from "./ReninNode";
-import { registerErrorOverlay } from "./ui/error";
-import { Music } from "./music";
-import { UIAnimation } from "./ui/UIAnimation";
-import { UIBox } from "./ui/UIBox";
-import screenShader from "./ui/screenShader.glsl";
-import performancePanelShader from "./ui/performancePanel.glsl";
-import { thirdsOverlayTexture } from "./ui/thirdsOverlay";
-import { performancePanelTexture } from "./ui/performancePanelTexture";
+} from 'three';
+import { AudioBar } from './ui/AudioBar';
+import { Sync } from './sync';
+import defaultVert from './default.vert.glsl';
+import { lerp } from './interpolations';
+import { colors } from './ui/colors';
+import { getWindowHeight, getWindowWidth } from './utils';
+import { ReninNode } from './ReninNode';
+import { registerErrorOverlay } from './ui/error';
+import { Music } from './music';
+import { UIAnimation } from './ui/UIAnimation';
+import { UIBox } from './ui/UIBox';
+import screenShader from './ui/screenShader.glsl';
+import performancePanelShader from './ui/performancePanel.glsl';
+import { thirdsOverlayTexture } from './ui/thirdsOverlay';
+import { performancePanelTexture } from './ui/performancePanelTexture';
 
 /* otherwise it won't be added to the build */
-export * as vite from "./ui/vite";
-export * as ReninNode from "./ReninNode";
+export * as vite from './ui/vite';
+export * as ReninNode from './ReninNode';
 
 export const defaultVertexShader = defaultVert;
 
@@ -46,7 +46,7 @@ export interface Options {
   root: ReninNode;
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
-  toneMapping: WebGLRenderer["toneMapping"];
+  toneMapping: WebGLRenderer['toneMapping'];
 }
 
 export class Renin {
@@ -134,17 +134,17 @@ export class Renin {
     this.renderer.physicallyCorrectLights = true;
     this.audioBar = new AudioBar(this);
 
-    const body = document.getElementsByTagName("body")[0];
+    const body = document.getElementsByTagName('body')[0];
     body.appendChild(this.renderer.domElement);
-    this.renderer.domElement.style.position = "fixed";
-    this.renderer.domElement.style.top = "0px";
-    this.renderer.domElement.style.left = "0px";
-    this.renderer.domElement.style.right = "0px";
-    this.renderer.domElement.style.bottom = "0px";
+    this.renderer.domElement.style.position = 'fixed';
+    this.renderer.domElement.style.top = '0px';
+    this.renderer.domElement.style.left = '0px';
+    this.renderer.domElement.style.right = '0px';
+    this.renderer.domElement.style.bottom = '0px';
 
     this.sync = new Sync(options.music);
 
-    this.renderer.domElement.addEventListener("wheel", (e) => {
+    this.renderer.domElement.addEventListener('wheel', (e) => {
       e.preventDefault();
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         const deltaY = Math.max(0, 1 - e.deltaY / 1000);
@@ -157,7 +157,7 @@ export class Renin {
       this.uiNeedsRender = true;
     });
 
-    this.renderer.domElement.addEventListener("click", (e) => {
+    this.renderer.domElement.addEventListener('click', (e) => {
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
       const padding = 16;
@@ -185,7 +185,7 @@ export class Renin {
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
 
-    this.framePanelCanvas = document.createElement("canvas");
+    this.framePanelCanvas = document.createElement('canvas');
     this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
     this.framePanel.setTexture(this.framePanelTexture, true);
 
@@ -205,36 +205,36 @@ export class Renin {
     this.camera.position.z = 100;
     this.resize(getWindowWidth(), getWindowHeight());
 
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
       this.uiNeedsRender = true;
       this.music.audioContext.resume();
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', (e) => {
       this.uiNeedsRender = true;
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
-      if (e.key === "m") {
+      if (e.key === 'm') {
         this.music.setVolume(this.music.getVolume() === 1 ? 0 : 1);
       }
-      if (e.key === "o") {
+      if (e.key === 'o') {
         this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value =
           this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value === 1 ? 0 : 1;
       }
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         this.isFullscreen = !this.isFullscreen;
         this.resize(getWindowWidth(), getWindowHeight());
       }
-      if (e.key === " ") {
+      if (e.key === ' ') {
         if (!this.music.paused) {
           this.music.pause();
         } else {
           this.music.play();
         }
       }
-      if (e.key === "v") {
+      if (e.key === 'v') {
         if (this.cuePoints.length >= 2) {
           this.cuePoints = [];
           return;
@@ -244,7 +244,7 @@ export class Renin {
         const bar = step - (step % this.sync.music.subdivision);
         this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision)];
       }
-      if (e.key === "b") {
+      if (e.key === 'b') {
         if (this.cuePoints.length >= 2) {
           this.cuePoints = [];
           return;
@@ -254,7 +254,7 @@ export class Renin {
         const bar = step - (step % (this.sync.music.subdivision * 4));
         this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision * 4)];
       }
-      if (e.key === "n") {
+      if (e.key === 'n') {
         if (this.cuePoints.length >= 2) {
           this.cuePoints = [];
           return;
@@ -268,7 +268,7 @@ export class Renin {
           this.sync.frameForStep(bar + this.sync.music.subdivision * 4 * 4),
         ];
       }
-      if (e.key === "g") {
+      if (e.key === 'g') {
         const step = this.sync.stepForFrame(this.frame);
         const quantizedStep = step - (step % this.sync.music.subdivision);
         if (this.cuePoints.length < 2) {
@@ -277,13 +277,13 @@ export class Renin {
           this.cuePoints = [];
         }
       }
-      if (e.key === "J") {
+      if (e.key === 'J') {
         this.jumpToFrame(this.frame - 1);
       }
-      if (e.key === "K") {
+      if (e.key === 'K') {
         this.jumpToFrame(this.frame + 1);
       }
-      if (e.key === "h") {
+      if (e.key === 'h') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
@@ -292,7 +292,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "l") {
+      if (e.key === 'l') {
         const period = this.sync.music.subdivision * 4;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -302,7 +302,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "j") {
+      if (e.key === 'j') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame - backskipSlop);
         let newStep = ((step / period) | 0) * period;
@@ -311,7 +311,7 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "k") {
+      if (e.key === 'k') {
         const period = this.sync.music.subdivision * 1;
         const step = this.sync.stepForFrame(this.frame);
         let newStep = ((step / period) | 0) * period;
@@ -321,16 +321,16 @@ export class Renin {
         }
         this.jumpToFrame(this.sync.frameForStep(newStep));
       }
-      if (e.key === "H") {
+      if (e.key === 'H') {
         this.jumpToFrame(0);
       }
 
       const playbackRates: Record<string, number> = {
-        "6": 0.25,
-        "7": 0.5,
-        "8": 2,
-        "9": 4,
-        "0": 1,
+        '6': 0.25,
+        '7': 0.5,
+        '8': 2,
+        '9': 4,
+        '0': 1,
       };
 
       if (e.key in playbackRates) {
@@ -370,7 +370,7 @@ export class Renin {
   /* for hmr */
   register(newNode: ReninNode) {
     function recurse(node: ReninNode): ReninNode | null {
-      if ("children" in node && node.children) {
+      if ('children' in node && node.children) {
         for (const [id, child] of Object.entries(node.children)) {
           const updated = recurse(child);
           if (updated) {
@@ -507,7 +507,7 @@ export class Renin {
     this.performancePanel.object3d.position.y = getWindowHeight() / 2 - 16 - 360 / 2;
     this.performancePanel.object3d.position.z = 50;
 
-    const framePanelCtx = this.framePanelCanvas.getContext("2d");
+    const framePanelCtx = this.framePanelCanvas.getContext('2d');
     if (framePanelCtx) {
       const ctx = framePanelCtx;
       const canvas = this.framePanelCanvas;
@@ -518,20 +518,20 @@ export class Renin {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const step = this.sync.stepForFrame(this.frame);
       const items: [string, number][] = [
-        ["Bar", (step / this.options.music.subdivision / 4) | 0],
-        ["Beat", (step / this.options.music.subdivision) | 0],
-        ["Step", step],
-        ["Frame", this.frame],
+        ['Bar', (step / this.options.music.subdivision / 4) | 0],
+        ['Beat', (step / this.options.music.subdivision) | 0],
+        ['Step', step],
+        ['Frame', this.frame],
       ];
-      ctx.font = "16px Barlow";
+      ctx.font = '16px Barlow';
       ctx.translate(0, canvas.height / 4);
-      ctx.textBaseline = "middle";
+      ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {
         const y = (i - (items.length - 1) / 2) * 24;
-        ctx.textAlign = "right";
+        ctx.textAlign = 'right';
         ctx.fillStyle = colors.slate._100;
-        ctx.fillText("" + value, canvas.width / 2 - 16, y);
-        ctx.textAlign = "left";
+        ctx.fillText('' + value, canvas.width / 2 - 16, y);
+        ctx.textAlign = 'left';
         ctx.fillStyle = colors.slate._300;
         ctx.fillText(label, 16, y);
       }
@@ -580,7 +580,7 @@ export class Renin {
     this.performancePanel.getMaterial().needsUpdate = true;
 
     const context = this.renderer.getContext() as WebGL2RenderingContext;
-    const extension = context.getExtension("EXT_disjoint_timer_query_webgl2");
+    const extension = context.getExtension('EXT_disjoint_timer_query_webgl2');
     if (this.query) {
       const available = context.getQueryParameter(this.query, context.QUERY_RESULT_AVAILABLE);
 
