@@ -2,11 +2,8 @@ import { defaultVertexShader, Renin } from 'renin/lib/renin';
 import { ReninNode } from 'renin/lib/ReninNode';
 import { easeIn, easeOut } from 'renin/lib/interpolations';
 import {
-  AmbientLight,
-  BackSide,
   BoxGeometry,
   Color,
-  DirectionalLight,
   DoubleSide,
   Mesh,
   MeshBasicMaterial,
@@ -20,15 +17,21 @@ import {
 import plasma from './plasma.glsl';
 
 export class JumpingBox extends ReninNode {
+  /* The frame range this node will be active. */
   startFrame = 0;
   endFrame = 3157;
+
+  /* Some basic setup for a 3D scene. */
   scene = new Scene();
   camera = new PerspectiveCamera();
-  renderTarget = new WebGLRenderTarget(640, 360);
   cube: Mesh<BoxGeometry, RawShaderMaterial>;
   skybox: Mesh<BoxGeometry, RawShaderMaterial>;
   beam: Mesh<BoxGeometry, MeshBasicMaterial>;
 
+  /* The renderTarget for this node. */
+  renderTarget = new WebGLRenderTarget(640, 360);
+
+  /* In the constructor we set up our scene. */
   constructor() {
     super();
     this.cube = new Mesh(
@@ -44,12 +47,7 @@ export class JumpingBox extends ReninNode {
       })
     );
     this.scene.add(this.cube);
-    this.scene.add(new AmbientLight(0.5));
-    const dl = new DirectionalLight('red');
-    dl.position.set(1, 1, 1);
-    this.scene.add(dl);
 
-    this.scene.add(this.camera);
     this.camera.position.z = 10;
     this.camera.fov = 22;
     this.camera.aspect = 16 / 9;
@@ -67,14 +65,26 @@ export class JumpingBox extends ReninNode {
     this.scene.add(this.beam);
   }
 
+  /* When the window resizes, we must take care to resize
+   * any assets or resources that depend on the screen size. */
   public resize(width: number, height: number) {
     this.renderTarget.setSize(width, height);
   }
 
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
+    /* Since these animation updates are not stateful, we do
+     * them "on-demand" in the render method. If they were stateful,
+     * (e.g. have something like this.variable++, or this.physics.update()
+     * or similar), it would have to belong in the update method, that
+     * guarantees that it will be called exactly 60 times per second. */
+
+    /* Here, we access information about the bpm of the music,
+     * and use our knowledge that the demo runs at 60 fps to
+     * calculate an angle animation that is in sync with the music. */
     let angle = ((frame * renin.sync.music.bpm) / 60 / 60) % 4;
     angle = (angle | 0) + easeIn(0, 1, angle % 1) ** 2;
     angle *= (Math.PI * 2) / 4;
+
     const radius = 1.5;
     this.cube.position.x = radius * Math.sin(angle);
     this.beam.position.x = radius * Math.sin(angle) * 1.5;
@@ -84,11 +94,16 @@ export class JumpingBox extends ReninNode {
     this.cube.rotation.z = angle;
     this.cube.rotation.y = frame * 0.05;
 
+    /* Utils from renin.sync contains several goodies to make
+     * it easier to code synced animations. */
     const scale = easeOut(1.3, 1, renin.sync.flash(frame, 12));
     this.cube.scale.set(scale, scale, scale);
 
     this.cube.material.uniforms.time.value = frame / 60;
     this.skybox.material.uniforms.time.value = frame / 60;
+
+    /* At the end of our render implementation, we finally render
+     * to the renderTarget, making the output available to the parent node. */
     renderer.setRenderTarget(this.renderTarget);
     renderer.render(this.scene, this.camera);
   }
