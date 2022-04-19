@@ -12,7 +12,7 @@ export class PostFx extends ReninNode {
     new BoxGeometry(2, 2, 2),
     new ShaderMaterial({
       uniforms: {
-        time: { value: 0 },
+        frame: { value: 0 },
         tDiffuse: { value: null },
       },
       fragmentShader: postfxFragmentShader,
@@ -29,12 +29,11 @@ export class PostFx extends ReninNode {
   constructor() {
     super();
     this.scene.add(this.screen);
-    this.scene.add(this.camera);
     this.camera.position.z = 10;
   }
 
   public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
-    this.screen.material.uniforms.time.value = frame;
+    this.screen.material.uniforms.frame.value = frame;
     this.screen.material.uniforms.tDiffuse.value = this.children.switcher.renderTarget.texture;
     this.screen.material.needsUpdate = true;
     renderer.render(this.scene, this.camera);
