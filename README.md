@@ -1,5 +1,7 @@
 # Renin
 
+![](screenshot.png)
+
 Renin is the successor to [nin](https://github.com/ninjadev/nin), Ninjadev's old demo tool.
 
 Renin is a browser-based demo creation library and tool built on top of [Three.js](https://github.com/mrdoob/three.js/) and [Vite](https://vite.dev).
