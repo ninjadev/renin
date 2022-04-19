@@ -6,7 +6,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && rollup -c"
+    "build": "rm -rf lib && rollup -c && cp -r ../example-project lib/example-project && rm -rf lib/example-project/node_modules"
   },
   "devDependencies": {
     "@betit/rollup-plugin-rename-extensions": "^0.1.0",
