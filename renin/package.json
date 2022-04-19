@@ -1,6 +1,6 @@
 {
   "name": "renin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "module": "lib/renin.js",
   "files": [
     "lib"
