@@ -9,17 +9,13 @@
     "serve": "vite preview"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.2.1",
-    "@types/node": "^17.0.23",
-    "@types/ws": "^8.5.3",
-    "typescript": "^4.3.2",
-    "vite": "^2.9.1"
+    "@rollup/plugin-node-resolve": "*",
+    "vite": "*",
+    "vite-plugin-string": "*"
   },
   "dependencies": {
-    "@types/three": "^0.139.0",
-    "renin": "file:../renin",
-    "three": "^0.139.2",
-    "vite-plugin-inspect": "^0.3.8",
-    "vite-plugin-string": "^1.0.1"
+    "@types/three": "*",
+    "renin": "*",
+    "three": "*"
   }
 }
