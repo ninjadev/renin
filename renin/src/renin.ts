@@ -32,7 +32,7 @@ export * as ReninNode from './ReninNode';
 export const defaultVertexShader = defaultVert;
 
 const framePanelWidth = 128 + 32;
-const framePanelHeight = 24 * 5;
+const framePanelHeight = 24 * 6;
 
 registerErrorOverlay();
 
@@ -517,11 +517,13 @@ export class Renin {
       ctx.fillStyle = colors.slate._500;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const step = this.sync.stepForFrame(this.frame);
-      const items: [string, number][] = [
+      const musicTime = this.music.getCurrentTime();
+      const items: [string, string | number][] = [
         ['Bar', (step / this.options.music.subdivision / 4) | 0],
         ['Beat', (step / this.options.music.subdivision) | 0],
         ['Step', step],
         ['Frame', this.frame],
+        ['Time', `${(musicTime / 60) | 0}m${(musicTime % 60 | 0).toString().padStart(2, '0')}s`],
       ];
       ctx.font = '16px Barlow';
       ctx.translate(0, canvas.height / 4);
