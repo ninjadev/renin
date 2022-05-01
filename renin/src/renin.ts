@@ -352,15 +352,20 @@ export class Renin {
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
 
-    if (this.isFullscreen) {
-      this.screenRenderTarget.setSize(width, height);
-      this.fullscreenAnimation.transition(1, 0.15, this.uiTime);
-    } else {
-      this.screenRenderTarget.setSize(640, 360);
-      this.fullscreenAnimation.transition(0, 0.15, this.uiTime);
+    let demoWidth = width;
+    let demoHeight = (demoWidth / 16) * 9;
+    if (demoHeight > height) {
+      demoHeight = height;
+      demoWidth = (demoHeight / 9) * 16;
+    }
+    if (!this.isFullscreen) {
+      demoWidth = 640;
+      demoHeight = 360;
     }
 
-    this.root._resize(width, height);
+    this.screenRenderTarget.setSize(demoWidth, demoHeight);
+    this.fullscreenAnimation.transition(this.isFullscreen ? 1 : 0, 0.15, this.uiTime);
+    this.root._resize(demoWidth, demoHeight);
 
     this.render();
     this.uiUpdate();
@@ -388,6 +393,7 @@ export class Renin {
     if (updated) {
       this.root = updated;
     }
+    newNode.resize(this.screenRenderTarget.width, this.screenRenderTarget.height);
   }
 
   loop = () => {
