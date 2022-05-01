@@ -406,12 +406,12 @@ export class Renin {
     this.uiDt += this.uiTime - this.uiOldTime;
     let demoNeedsRender = false;
     const frameLength = 1 / 60;
-    if (this.dt >= 10 * frameLength) {
+    if (this.dt >= 4 * frameLength) {
       /* give up and skip! */
       this.dt %= frameLength;
       this.jumpToFrame((this.time * 60) | 0);
     }
-    if (this.uiDt >= 10 * frameLength) {
+    if (this.uiDt >= 4 * frameLength) {
       /* give up and skip! */
       this.uiDt %= frameLength;
     }
