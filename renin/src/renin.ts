@@ -32,7 +32,7 @@ export * as ReninNode from './ReninNode';
 export const defaultVertexShader = defaultVert;
 
 const framePanelWidth = 128 + 32;
-const framePanelHeight = 24 * 5;
+const framePanelHeight = 24 * 6;
 
 registerErrorOverlay();
 
@@ -352,15 +352,20 @@ export class Renin {
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
 
-    if (this.isFullscreen) {
-      this.screenRenderTarget.setSize(width, height);
-      this.fullscreenAnimation.transition(1, 0.15, this.uiTime);
-    } else {
-      this.screenRenderTarget.setSize(640, 360);
-      this.fullscreenAnimation.transition(0, 0.15, this.uiTime);
+    let demoWidth = width;
+    let demoHeight = (demoWidth / 16) * 9;
+    if (demoHeight > height) {
+      demoHeight = height;
+      demoWidth = (demoHeight / 9) * 16;
+    }
+    if (!this.isFullscreen) {
+      demoWidth = 640;
+      demoHeight = 360;
     }
 
-    this.root._resize(width, height);
+    this.screenRenderTarget.setSize(demoWidth, demoHeight);
+    this.fullscreenAnimation.transition(this.isFullscreen ? 1 : 0, 0.15, this.uiTime);
+    this.root._resize(demoWidth, demoHeight);
 
     this.render();
     this.uiUpdate();
@@ -388,6 +393,7 @@ export class Renin {
     if (updated) {
       this.root = updated;
     }
+    newNode.resize(this.screenRenderTarget.width, this.screenRenderTarget.height);
   }
 
   loop = () => {
@@ -400,11 +406,12 @@ export class Renin {
     this.uiDt += this.uiTime - this.uiOldTime;
     let demoNeedsRender = false;
     const frameLength = 1 / 60;
-    if (this.dt >= 10 * frameLength) {
+    if (this.dt >= 4 * frameLength) {
       /* give up and skip! */
-      this.dt %= frameLength;
+      this.jumpToFrame((this.time * 60) | 0);
+      this.dt = 0;
     }
-    if (this.uiDt >= 10 * frameLength) {
+    if (this.uiDt >= 4 * frameLength) {
       /* give up and skip! */
       this.uiDt %= frameLength;
     }
@@ -517,20 +524,29 @@ export class Renin {
       ctx.fillStyle = colors.slate._500;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const step = this.sync.stepForFrame(this.frame);
-      const items: [string, number][] = [
+      const musicTime = this.music.getCurrentTime();
+      const items: [string, string | number][] = [
         ['Bar', (step / this.options.music.subdivision / 4) | 0],
         ['Beat', (step / this.options.music.subdivision) | 0],
         ['Step', step],
         ['Frame', this.frame],
+        ['Time', `${(musicTime / 60) | 0}m${(musicTime % 60 | 0).toString().padStart(2, '0')}s`],
       ];
       ctx.font = '16px Barlow';
       ctx.translate(0, canvas.height / 4);
       ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {
+        const valueAsText = '' + value;
         const y = (i - (items.length - 1) / 2) * 24;
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'center';
         ctx.fillStyle = colors.slate._100;
-        ctx.fillText('' + value, canvas.width / 2 - 16, y);
+        let offset = 0;
+        for (let j = 0; j < valueAsText.length; j++) {
+          const letter = valueAsText[valueAsText.length - j - 1];
+          const letterWidth = letter === 'm' ? 16 : 9;
+          ctx.fillText(letter, canvas.width / 2 - 16 - offset - letterWidth / 2, y);
+          offset += letterWidth;
+        }
         ctx.textAlign = 'left';
         ctx.fillStyle = colors.slate._300;
         ctx.fillText(label, 16, y);
