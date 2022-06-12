@@ -536,10 +536,17 @@ export class Renin {
       ctx.translate(0, canvas.height / 4);
       ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {
+        const valueAsText = '' + value;
         const y = (i - (items.length - 1) / 2) * 24;
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'center';
         ctx.fillStyle = colors.slate._100;
-        ctx.fillText('' + value, canvas.width / 2 - 16, y);
+        let offset = 0;
+        for (let j = 0; j < valueAsText.length; j++) {
+          const letter = valueAsText[valueAsText.length - j - 1];
+          const letterWidth = letter === 'm' ? 16 : 9;
+          ctx.fillText(letter, canvas.width / 2 - 16 - offset - letterWidth / 2, y);
+          offset += letterWidth;
+        }
         ctx.textAlign = 'left';
         ctx.fillStyle = colors.slate._300;
         ctx.fillText(label, 16, y);
