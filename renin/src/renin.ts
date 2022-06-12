@@ -408,8 +408,8 @@ export class Renin {
     const frameLength = 1 / 60;
     if (this.dt >= 4 * frameLength) {
       /* give up and skip! */
-      this.dt %= frameLength;
       this.jumpToFrame((this.time * 60) | 0);
+      this.dt = 0;
     }
     if (this.uiDt >= 4 * frameLength) {
       /* give up and skip! */
