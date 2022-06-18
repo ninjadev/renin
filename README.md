@@ -26,7 +26,7 @@ yarn install
 yarn run dev
 ```
 
-Now visit localhost:3000 to start renin. Try modifing the source in mydemo/src/ to get started. Happy hacking!
+Now visit localhost:3000 in Chrome to start renin. Try modifing the source in mydemo/src/ to get started. Happy hacking!
 
 
 <br/>
