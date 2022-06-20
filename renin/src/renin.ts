@@ -394,6 +394,9 @@ export class Renin {
       this.root = updated;
     }
     newNode.resize(this.screenRenderTarget.width, this.screenRenderTarget.height);
+
+    /* To rerender the current frame */
+    setTimeout(() => this.jumpToFrame(this.frame), 0);
   }
 
   loop = () => {
