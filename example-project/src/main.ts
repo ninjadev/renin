@@ -10,7 +10,7 @@ export const renin = new Renin({
     subdivision: 12,
     beatOffset: 4,
   },
-  root: new PostFx(),
+  root: PostFx,
   productionMode: import.meta.env.PROD,
   rendererOptions: {
     powerPreference: 'high-performance',

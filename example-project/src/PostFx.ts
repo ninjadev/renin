@@ -20,21 +20,22 @@ export class PostFx extends ReninNode {
     })
   );
 
-  children = children<{
-    switcher: SceneSwitcher;
-  }>({
-    switcher: SceneSwitcher,
-  });
-
-  constructor() {
-    super();
+  constructor(renin: Renin) {
+    super(renin);
     this.scene.add(this.screen);
     this.camera.position.z = 10;
+
+    this.children = children<{
+      switcher: SceneSwitcher;
+    }>({
+      switcher: new SceneSwitcher(renin),
+    });
   }
 
   public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
     this.screen.material.uniforms.frame.value = frame;
-    this.screen.material.uniforms.tDiffuse.value = this.children.switcher.renderTarget.texture;
+    //@ts-ignore
+    this.screen.material.uniforms.tDiffuse.value = this.children?.switcher.renderTarget.texture;
     this.screen.material.needsUpdate = true;
     renderer.render(this.scene, this.camera);
   }

@@ -3,6 +3,8 @@ import envMap from './envMap.jpg';
 import {
   BufferGeometry,
   EquirectangularReflectionMapping,
+  FloatType,
+  LinearEncoding,
   Mesh,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
@@ -14,6 +16,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
+import { Renin } from 'renin/lib/renin';
 
 export class SpinningDonut extends ReninNode {
   /* The frame range this node will be active. */
@@ -25,11 +28,13 @@ export class SpinningDonut extends ReninNode {
   cube: Mesh<BufferGeometry, MeshStandardMaterial>;
 
   /* The renderTarget for this node. */
-  renderTarget = new WebGLRenderTarget(640, 360);
+  renderTarget = new WebGLRenderTarget(640, 360, {
+    type: FloatType,
+  });
 
   /* In the constructor we set up our scene. */
-  constructor() {
-    super();
+  constructor(renin: Renin) {
+    super(renin);
 
     /* Here load an image that we will use as an envMap. In renin,
      * we can load images by just using THREE's built-in TextureLoader
@@ -75,7 +80,9 @@ export class SpinningDonut extends ReninNode {
 
     /* At the end of our render implementation, we finally render
      * to the renderTarget, making the output available to the parent node. */
+
     renderer.setRenderTarget(this.renderTarget);
+    renderer.outputEncoding = LinearEncoding;
     renderer.render(this.scene, this.camera);
   }
 }

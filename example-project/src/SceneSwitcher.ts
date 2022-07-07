@@ -18,31 +18,33 @@ export class SceneSwitcher extends ReninNode {
   camera = new OrthographicCamera(-1, 1, 1, -1);
   renderTarget = new WebGLRenderTarget(640, 360);
   screen = new Mesh(new BoxGeometry(2, 2, 2), new MeshBasicMaterial());
-
-  children = children<{
-    spinningcube: SpinningDonut;
-    jumpingbox: JumpingBox;
-  }>({
-    spinningcube: SpinningDonut,
-    jumpingbox: JumpingBox,
-  });
   public resize(width: number, height: number) {
     this.renderTarget.setSize(width, height);
   }
 
-  constructor() {
-    super();
+  constructor(renin: Renin) {
+    super(renin);
+
+    this.children = children<{
+      spinningcube: SpinningDonut;
+      jumpingbox: JumpingBox;
+    }>({
+      spinningcube: new SpinningDonut(renin),
+      jumpingbox: new JumpingBox(renin),
+    });
     this.scene.add(this.screen);
     this.scene.add(this.camera);
     this.camera.position.z = 10;
   }
 
-  public render(frame: number, renderer: WebGLRenderer, _renin: Renin) {
+  public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     this.screen.material.map = null;
-    if (this.children.jumpingbox.isActive) {
+    if (this.children?.jumpingbox.isActive) {
+      //@ts-ignore
       this.screen.material.map = this.children.jumpingbox.renderTarget.texture;
     }
-    if (this.children.spinningcube.isActive) {
+    if (this.children?.spinningcube.isActive) {
+      //@ts-ignore
       this.screen.material.map = this.children.spinningcube.renderTarget.texture;
     }
     this.screen.material.needsUpdate = true;

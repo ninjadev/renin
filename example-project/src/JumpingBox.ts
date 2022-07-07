@@ -5,8 +5,11 @@ import {
   BoxGeometry,
   Color,
   DoubleSide,
+  FloatType,
+  LinearEncoding,
   Mesh,
   MeshBasicMaterial,
+  NoToneMapping,
   PerspectiveCamera,
   RawShaderMaterial,
   Scene,
@@ -29,11 +32,13 @@ export class JumpingBox extends ReninNode {
   beam: Mesh<BoxGeometry, MeshBasicMaterial>;
 
   /* The renderTarget for this node. */
-  renderTarget = new WebGLRenderTarget(640, 360);
+  renderTarget = new WebGLRenderTarget(640, 360, {
+    type: FloatType,
+  });
 
   /* In the constructor we set up our scene. */
-  constructor() {
-    super();
+  constructor(renin: Renin) {
+    super(renin);
     this.cube = new Mesh(
       new BoxGeometry(),
       new ShaderMaterial({
@@ -105,6 +110,8 @@ export class JumpingBox extends ReninNode {
     /* At the end of our render implementation, we finally render
      * to the renderTarget, making the output available to the parent node. */
     renderer.setRenderTarget(this.renderTarget);
+    renderer.toneMapping = NoToneMapping;
+    renderer.outputEncoding = LinearEncoding;
     renderer.render(this.scene, this.camera);
   }
 }
