@@ -43,7 +43,7 @@ export interface Options {
     subdivision: number;
     beatOffset: number;
   };
-  root: ReninNode;
+  root: typeof ReninNode;
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
   toneMapping: WebGLRenderer['toneMapping'];
@@ -129,9 +129,9 @@ export class Renin {
   constructor(options: Options) {
     Renin.instance = this;
     this.options = options;
-    this.root = options.root;
     this.renderer = new WebGLRenderer(options.rendererOptions);
     this.renderer.physicallyCorrectLights = true;
+    this.root = new options.root(this);
     this.audioBar = new AudioBar(this);
 
     const body = document.getElementsByTagName('body')[0];
@@ -373,7 +373,8 @@ export class Renin {
   }
 
   /* for hmr */
-  register(newNode: ReninNode) {
+  register(newNodeClass: typeof ReninNode) {
+    const newNode = new newNodeClass(this);
     function recurse(node: ReninNode): ReninNode | null {
       if ('children' in node && node.children) {
         for (const [id, child] of Object.entries(node.children)) {

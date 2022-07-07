@@ -12,7 +12,7 @@ export function children<T>(spec: any): T {
       if (store[prop]) {
         return store[prop];
       } else {
-        store[prop] = new spec[prop]();
+        store[prop] = spec[prop];
         return store[prop];
       }
     },
