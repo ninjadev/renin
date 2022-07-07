@@ -1,10 +1,14 @@
 import {
   CanvasTexture,
   Color,
+  FloatType,
+  LinearEncoding,
+  MeshBasicMaterial,
   NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
+  sRGBEncoding,
   WebGLRenderer,
   WebGLRendererParameters,
   WebGLRenderTarget,
@@ -24,6 +28,7 @@ import screenShader from './ui/screenShader.glsl';
 import performancePanelShader from './ui/performancePanel.glsl';
 import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 import { performancePanelTexture } from './ui/performancePanelTexture';
+import { ColorManagement } from 'three/src/math/ColorManagement';
 
 /* otherwise it won't be added to the build */
 export * as vite from './ui/vite';
@@ -69,7 +74,6 @@ export class Renin {
   renderTimesGPUIndex: number = 0;
 
   renderer: WebGLRenderer;
-  demoRenderTarget = new WebGLRenderTarget(640, 360);
   screen = new UIBox({
     shadowSize: 16,
     customMaterial: new ShaderMaterial({
@@ -108,7 +112,9 @@ export class Renin {
   scene = new Scene();
   camera = new OrthographicCamera(-1, 1, 1, -1);
   root: ReninNode;
-  screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360);
+  screenRenderTarget: WebGLRenderTarget = new WebGLRenderTarget(640, 360, {
+    type: FloatType,
+  });
   isFullscreen: boolean = false;
   fullscreenAnimation = new UIAnimation();
   uiOldTime: number = Date.now() / 1000;
@@ -128,9 +134,12 @@ export class Renin {
 
   constructor(options: Options) {
     Renin.instance = this;
+    //@ts-ignore
+    ColorManagement.legacyMode = false;
     this.options = options;
     this.renderer = new WebGLRenderer(options.rendererOptions);
     this.renderer.physicallyCorrectLights = true;
+    this.renderer.outputEncoding = LinearEncoding;
     this.root = new options.root(this);
     this.audioBar = new AudioBar(this);
 
@@ -583,15 +592,22 @@ export class Renin {
     this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
     this.performancePanel.getMaterial().uniforms.overlay.value = performancePanelTexture;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
+    const oldEncoding = this.renderer.outputEncoding;
+    this.renderer.outputEncoding = sRGBEncoding;
     this.renderer.render(this.scene, this.camera);
+    this.renderer.outputEncoding = oldEncoding;
   }
 
   render() {
     if (this.options.productionMode) {
       this.renderer.setRenderTarget(null);
+      const oldEncoding = this.renderer.outputEncoding;
+      const oldToneMapping = this.renderer.toneMapping;
       this.renderer.toneMapping = this.options.toneMapping;
+      this.renderer.outputEncoding = sRGBEncoding;
       this.root._render(this.frame, this.renderer, this);
-      this.renderer.toneMapping = NoToneMapping;
+      this.renderer.outputEncoding = oldEncoding;
+      this.renderer.toneMapping = oldToneMapping;
       return;
     }
     const time = performance.now();
@@ -625,9 +641,10 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
+    const oldToneMapping = this.renderer.toneMapping;
     this.renderer.toneMapping = this.options.toneMapping;
     this.root._render(this.frame, this.renderer, this);
-    this.renderer.toneMapping = NoToneMapping;
+    this.renderer.toneMapping = oldToneMapping;
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.renderTimesCPU[this.renderTimesCPUIndex] = dt;
