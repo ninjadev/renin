@@ -10,7 +10,7 @@ export default function reninPlugin() {
           src += `
 if (import.meta.hot) {
   import.meta.hot.accept((module) => {
-    Renin.instance.register(new module.${match[1]}());
+    Renin.instance.register(module.${match[1]});
   });
 }
         `;

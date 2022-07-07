@@ -15,6 +15,7 @@ export class ReninNode {
 
   /* The unique node id of this node. */
   id: string;
+  renin: Renin;
 
   /* Subclasses can implement this if they need code to happen in the
    * update stage. Update is guaranteed to be called exactly 60 times
@@ -33,8 +34,9 @@ export class ReninNode {
   // @ts-ignore
   resize(width: number, height: number): void {}
 
-  constructor() {
+  constructor(renin: Renin) {
     this.id = this.constructor.name + '-' + ((1000000 * Math.random()) | 0);
+    this.renin = renin;
     console.log('new', this.id);
   }
 
