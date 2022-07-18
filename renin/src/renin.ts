@@ -617,26 +617,28 @@ export class Renin {
 
     const context = this.renderer.getContext() as WebGL2RenderingContext;
     const extension = context.getExtension('EXT_disjoint_timer_query_webgl2');
-    if (this.query) {
-      const available = context.getQueryParameter(this.query, context.QUERY_RESULT_AVAILABLE);
+    if (extension) {
+      if (this.query) {
+        const available = context.getQueryParameter(this.query, context.QUERY_RESULT_AVAILABLE);
 
-      if (available) {
-        const elapsedNanos = context.getQueryParameter(this.query, context.QUERY_RESULT);
-        this.renderTimesGPU[this.renderTimesGPUIndex] = elapsedNanos / 1_000_000;
-        this.renderTimesGPUIndex = (this.renderTimesGPUIndex + 1) % this.renderTimesGPU.length;
+        if (available) {
+          const elapsedNanos = context.getQueryParameter(this.query, context.QUERY_RESULT);
+          this.renderTimesGPU[this.renderTimesGPUIndex] = elapsedNanos / 1_000_000;
+          this.renderTimesGPUIndex = (this.renderTimesGPUIndex + 1) % this.renderTimesGPU.length;
+          this.query = context.createQuery();
+          if (this.query) {
+            context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
+            this.queryIsActive = true;
+          }
+        } else {
+          // missed query!
+        }
+      } else {
         this.query = context.createQuery();
         if (this.query) {
           context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
           this.queryIsActive = true;
         }
-      } else {
-        // missed query!
-      }
-    } else {
-      this.query = context.createQuery();
-      if (this.query) {
-        context.beginQuery(extension.TIME_ELAPSED_EXT, this.query);
-        this.queryIsActive = true;
       }
     }
 
