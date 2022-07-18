@@ -586,10 +586,14 @@ export class Renin {
     this.performancePanel.getMaterial().uniforms.uiUpdateTimesIndex.value = this.uiUpdateTimesIndex;
     this.performancePanel.getMaterial().uniforms.memoryPercentages.value = this.memoryPercentages;
     this.performancePanel.getMaterial().uniforms.memoryPercentagesIndex.value = this.memoryPercentagesIndex;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
-    //@ts-expect-error
-    this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    try {
+      //@ts-expect-error
+      this.performancePanel.getMaterial().uniforms.totalJSHeapSize.value = performance.memory.totalJSHeapSize;
+      //@ts-expect-error
+      this.performancePanel.getMaterial().uniforms.jsHeapSizeLimit.value = performance.memory.jsHeapSizeLimit;
+    } catch {
+      /* Non-standard memory API that is only supported in Blink, so just ignore if it doesn't work. */
+    }
     this.performancePanel.getMaterial().uniforms.overlay.value = performancePanelTexture;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
     const oldEncoding = this.renderer.outputEncoding;
