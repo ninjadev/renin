@@ -4,7 +4,7 @@ export class Sync {
   step = 0;
   beat = false;
   readonly framesPerSubdivision: number;
-  music: { src: string; bpm: number; subdivision: number };
+  music: { src: string; bpm: number; subdivision: number; beatsPerBar: number };
 
   constructor(music: Options['music']) {
     const stepsPerMinute = music.bpm * music.subdivision;

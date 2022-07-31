@@ -7,6 +7,7 @@ uniform float[600] beatBins;
 uniform float beatOffset;
 uniform float bpm;
 uniform float beats;
+uniform float beatsPerBar;
 
 
 void main() {
@@ -21,8 +22,8 @@ void main() {
     vec3 slate_700 = vec3(float(0x33) / 255., float(0x41) / 255., float(0x55) / 255.);
     vec3 slate_800 = vec3(float(0x1e) / 255., float(0x29) / 255., float(0x3b) / 255.);
     vec3 color = slate_800;
-    float barGroups = beats / 16.;
-    float isStrongBeat = step(1., mod(vUv.x * width, width / beats * 4.));
+    float barGroups = beats / 4. / beatsPerBar;
+    float isStrongBeat = step(1., mod(vUv.x * width, width / beats * beatsPerBar));
     vec3 beatColor = mix(slate_400, slate_500, isStrongBeat);
     color = mix(color, slate_700, float(0xcc) / 255. * step(1., mod(-beatOffset / 16. + vUv.x * barGroups, 2.)));
     color = mix(color, slate_600, float(0xcc) / 255. * (1. - step(beatBins[beat], abs(vUv.y - 0.5))));
