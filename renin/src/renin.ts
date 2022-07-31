@@ -133,6 +133,7 @@ export class Renin {
   memoryPercentagesIndex: number = 0;
   queryIsActive: boolean = false;
   options: Options;
+  needsSkipBecauseTabHasBeenInTheBackground = false;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -144,6 +145,12 @@ export class Renin {
     this.renderer.outputEncoding = LinearEncoding;
     this.root = new options.root(this);
     this.audioBar = new AudioBar(this);
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this.needsSkipBecauseTabHasBeenInTheBackground = true;
+      }
+    });
 
     const body = document.getElementsByTagName('body')[0];
     body.appendChild(this.renderer.domElement);
@@ -425,15 +432,14 @@ export class Renin {
     this.uiDt += this.uiTime - this.uiOldTime;
     let demoNeedsRender = false;
     const frameLength = 1 / 60;
-    if (this.dt >= 4 * frameLength) {
-      /* give up and skip! */
+
+    if (this.needsSkipBecauseTabHasBeenInTheBackground) {
+      this.needsSkipBecauseTabHasBeenInTheBackground = false;
       this.jumpToFrame((this.time * 60) | 0);
       this.dt = 0;
-    }
-    if (this.uiDt >= 4 * frameLength) {
-      /* give up and skip! */
       this.uiDt %= frameLength;
     }
+
     while (this.dt >= frameLength) {
       this.dt -= frameLength;
       this.update(this.frame);
