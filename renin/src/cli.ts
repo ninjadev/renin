@@ -1,10 +1,14 @@
 import fs from 'fs/promises';
 import path from 'path';
 import url from 'url';
+import util from 'util';
+import child_process from 'child_process';
 
 function printHelp() {
   console.log('Usage: npx renin init <name>');
 }
+
+const exec = util.promisify(child_process.exec);
 
 async function init(name: string) {
   console.log(`Creating new renin project in ${name}...`);
@@ -16,6 +20,9 @@ async function init(name: string) {
   } catch {}
   await fs.mkdir(name, { recursive: true });
   await fs.cp(path.join(base, 'example-project'), name, { recursive: true });
+  await exec('git init', { cwd: name });
+  await exec('git add -A', { cwd: name });
+  await exec(`git commit -m "Initial commit\n\nGenerated with renin."`, { cwd: name });
   console.log('Project set up!');
 }
 
