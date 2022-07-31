@@ -52,6 +52,8 @@ export interface Options {
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
   toneMapping: WebGLRenderer['toneMapping'];
+  maxWidth: number;
+  maxHeight: number;
 }
 
 export class Renin {
@@ -386,10 +388,10 @@ export class Renin {
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
 
-    let demoWidth = width;
+    let demoWidth = Math.min(width, this.options.maxWidth);
     let demoHeight = (demoWidth / 16) * 9;
     if (demoHeight > height) {
-      demoHeight = height;
+      demoHeight = Math.min(height, this.options.maxHeight);
       demoWidth = (demoHeight / 9) * 16;
     }
     if (!this.isFullscreen) {
