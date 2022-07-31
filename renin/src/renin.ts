@@ -551,7 +551,7 @@ export class Renin {
         ['Time', `${(musicTime / 60) | 0}m${(musicTime % 60 | 0).toString().padStart(2, '0')}s`],
       ];
       ctx.font = '16px Barlow';
-      ctx.translate(0, canvas.height / 4);
+      ctx.translate(0, framePanelHeight / 2);
       ctx.textBaseline = 'middle';
       for (let [i, [label, value]] of items.entries()) {
         const valueAsText = '' + value;
@@ -562,7 +562,7 @@ export class Renin {
         for (let j = 0; j < valueAsText.length; j++) {
           const letter = valueAsText[valueAsText.length - j - 1];
           const letterWidth = letter === 'm' ? 16 : 9;
-          ctx.fillText(letter, canvas.width / 2 - 16 - offset - letterWidth / 2, y);
+          ctx.fillText(letter, framePanelWidth - 16 - offset - letterWidth / 2, y);
           offset += letterWidth;
         }
         ctx.textAlign = 'left';
