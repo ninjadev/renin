@@ -206,6 +206,7 @@ export class Renin {
     this.framePanelCanvas = document.createElement('canvas');
     this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
     this.framePanel.setTexture(this.framePanelTexture, true);
+    this.framePanelTexture.encoding = sRGBEncoding;
 
     this.scene.add(this.audioBar.obj);
 

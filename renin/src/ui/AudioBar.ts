@@ -8,6 +8,7 @@ import {
   RepeatWrapping,
   ShaderMaterial,
   BoxBufferGeometry,
+  sRGBEncoding,
 } from 'three';
 import { colors } from './colors';
 import { Music } from '../music';
@@ -59,6 +60,7 @@ const getNodeTexture = (name: string) => {
     ctx.fillText(name, 16, boxHeight / 2);
     const texture = new CanvasTexture(canvas);
     store[name] = texture;
+    texture.encoding = sRGBEncoding;
     return texture;
   }
 };
