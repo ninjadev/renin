@@ -4,8 +4,8 @@ import {
   MeshBasicMaterial,
   Object3D,
   CanvasTexture,
-  Texture,
   RepeatWrapping,
+  Texture,
   ShaderMaterial,
   BoxBufferGeometry,
 } from 'three';
@@ -17,6 +17,7 @@ import { makeRoundedRectangleBufferGeometry, UIBox } from './UIBox';
 import { getWindowHeight, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
 import { lerp } from '../interpolations';
+import { UIAnimation } from './UIAnimation';
 
 export const barHeight = 48;
 const boxHeight = 40;
@@ -73,6 +74,8 @@ export class AudioBar {
   zoomStartFrame: number = 0;
   zoomEndFrame: number = 0;
   zoomAmount: number = 1;
+  showGlowAnimation = new UIAnimation();
+  oldIsMusicPaused = false;
 
   getClickedFrame(xInPercent: number): number {
     if (!this.music) {
@@ -104,6 +107,17 @@ export class AudioBar {
     this.zoomEndFrame += delta * this.zoomAmount * 100;
   }
 
+  update(uiTime: number) {
+    if (!this.music) {
+      return false;
+    }
+    if (this.music.paused !== this.oldIsMusicPaused) {
+      this.oldIsMusicPaused = this.music.paused;
+      this.showGlowAnimation.transition(this.music.paused ? 0 : 1, this.music.paused ? 0.2 : 0.5, uiTime);
+    }
+    return this.showGlowAnimation.update(uiTime);
+  }
+
   render(renin: Renin, cuePoints: number[]) {
     if (!this.music) {
       return;
@@ -123,7 +137,7 @@ export class AudioBar {
     const center = (-0.5 + (this.zoomEndFrame + this.zoomStartFrame) / maxFrame / 2) * (this.width - 32);
     this.obj.position.x = -center / scale;
 
-    this.audioTrack.material.opacity = this.music.paused ? 0 : 0.3;
+    this.audioTrack.material.opacity = 0.3 * this.showGlowAnimation.value;
     this.audioTrack.material.needsUpdate = true;
 
     for (const [i, mesh] of this.cuePoints.entries()) {
@@ -272,6 +286,7 @@ export class AudioBar {
       this.audioTrack.material.opacity = 0.5;
       this.audioTrack.material.map.repeat.set(-1, 1);
       this.audioTrack.material.map.wrapS = RepeatWrapping;
+      this.audioTrack.material.map.wrapT = RepeatWrapping;
     }
     const line = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ color: colors.green._500 }));
     line.position.x = 0.5;
