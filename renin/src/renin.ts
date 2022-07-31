@@ -3,8 +3,6 @@ import {
   Color,
   FloatType,
   LinearEncoding,
-  MeshBasicMaterial,
-  NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
@@ -89,6 +87,7 @@ export class Renin {
       },
     }),
   });
+  screenBackdrop = new UIBox({ shadowSize: 0 });
   framePanel = new UIBox({ shadowSize: 16 });
   performancePanel = new UIBox({
     shadowSize: 16,
@@ -200,6 +199,7 @@ export class Renin {
     this.scene.add(this.screen.object3d);
     this.scene.add(this.framePanel.object3d);
     this.scene.add(this.performancePanel.object3d);
+    this.scene.add(this.screenBackdrop.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
     this.screen.object3d.scale.y = 360;
@@ -500,21 +500,40 @@ export class Renin {
     const time = performance.now();
     needsRenderAfter ||= this.fullscreenAnimation.update(this.uiTime);
     needsRenderAfter ||= this.audioBar.update(this.uiTime);
+
+    let demoWidth = this.width;
+    let demoHeight = (demoWidth / 16) * 9;
+    if (demoHeight > this.height) {
+      demoHeight = this.height;
+      demoWidth = (demoHeight / 9) * 16;
+    }
+
+    const screenLeft = lerp(this.width - 640 - 16, (this.width - demoWidth) / 2, this.fullscreenAnimation.value);
+    const screenRight = lerp(this.width - 16, demoWidth + (this.width - demoWidth) / 2, this.fullscreenAnimation.value);
+    const screenTop = lerp(16, (this.height - demoHeight) / 2, this.fullscreenAnimation.value);
+    const screenBottom = lerp(360 + 16, demoHeight + (this.height - demoHeight) / 2, this.fullscreenAnimation.value);
+
     this.screen.setSize(
-      lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
-      lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
+      lerp(640, screenRight - screenLeft, this.fullscreenAnimation.value),
+      lerp(360, screenBottom - screenTop, this.fullscreenAnimation.value)
     );
     this.screen.object3d.position.x = lerp(
       getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - 16,
-      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2,
+      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - (this.width - screenRight),
       this.fullscreenAnimation.value
     );
     this.screen.object3d.position.y = lerp(
       getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - 16,
-      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2,
+      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - screenTop,
       this.fullscreenAnimation.value
     );
     this.screen.object3d.position.z = 90;
+    this.screenBackdrop.object3d.position.z = 89;
+    this.screenBackdrop.setSize(this.width * 2, this.height * 2);
+    this.screenBackdrop.getMaterial().opacity = this.fullscreenAnimation.value ** 4;
+    this.screenBackdrop.getMaterial().transparent = true;
+    this.screenBackdrop.getMaterial().color.setRGB(0, 0, 0);
+    this.screenBackdrop.getMaterial().needsUpdate = true;
 
     if (this.fullscreenAnimation.value > 0.9999) {
       return needsRenderAfter;
