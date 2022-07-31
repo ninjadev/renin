@@ -29,6 +29,7 @@ import performancePanelShader from './ui/performancePanel.glsl';
 import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 import { performancePanelTexture } from './ui/performancePanelTexture';
 import { ColorManagement } from 'three/src/math/ColorManagement';
+import { getSetting, setSetting } from './ui/storedSettings';
 
 /* otherwise it won't be added to the build */
 export * as vite from './ui/vite';
@@ -200,6 +201,8 @@ export class Renin {
 
     this.scene.add(this.audioBar.obj);
 
+    this.music.setVolume(getSetting('volume'));
+
     (async () => {
       const response = await fetch(options.music.src);
       const data = await response.arrayBuffer();
@@ -226,7 +229,9 @@ export class Renin {
       const backskipSlop = this.music.paused ? 0 : 20;
       console.log(e.key);
       if (e.key === 'm') {
-        this.music.setVolume(this.music.getVolume() === 1 ? 0 : 1);
+        const newVolume = this.music.getVolume() === 1 ? 0 : 1;
+        setSetting('volume', newVolume);
+        this.music.setVolume(newVolume);
       }
       if (e.key === 'o') {
         this.screen.getMaterial().uniforms.thirdsOverlayOpacity.value =
