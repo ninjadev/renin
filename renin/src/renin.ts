@@ -3,8 +3,6 @@ import {
   Color,
   FloatType,
   LinearEncoding,
-  MeshBasicMaterial,
-  NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
