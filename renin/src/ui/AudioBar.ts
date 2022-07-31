@@ -231,6 +231,7 @@ export class AudioBar {
     audioBarShaderMaterial.uniforms.bpm.value = options.bpm;
     audioBarShaderMaterial.uniforms.beats.value = beats;
     audioBarShaderMaterial.uniforms.beatOffset.value = options.beatOffset;
+    audioBarShaderMaterial.uniforms.beatsPerBar.value = options.beatsPerBar;
     this.zoom(1);
   }
   audioTrack: Mesh<BoxGeometry, MeshBasicMaterial>;
@@ -252,6 +253,7 @@ export class AudioBar {
           bpm: { value: 0 },
           beats: { value: 0 },
           beatOffset: { value: 0 },
+          beatsPerBar: { value: 0 },
         },
         transparent: true,
       }),

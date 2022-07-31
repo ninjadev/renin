@@ -48,6 +48,7 @@ export interface Options {
     bpm: number;
     subdivision: number;
     beatOffset: number;
+    beatsPerBar: number;
   };
   root: typeof ReninNode;
   productionMode: boolean;
@@ -265,8 +266,11 @@ export class Renin {
         }
         /* repeat current bar */
         const step = this.sync.stepForFrame(this.frame);
-        const bar = step - (step % (this.sync.music.subdivision * 4));
-        this.cuePoints = [this.sync.frameForStep(bar), this.sync.frameForStep(bar + this.sync.music.subdivision * 4)];
+        const bar = step - (step % (this.sync.music.subdivision * this.sync.music.beatsPerBar));
+        this.cuePoints = [
+          this.sync.frameForStep(bar),
+          this.sync.frameForStep(bar + this.sync.music.subdivision * this.sync.music.beatsPerBar),
+        ];
       }
       if (e.key === 'n') {
         if (this.cuePoints.length >= 2) {
@@ -276,10 +280,10 @@ export class Renin {
         /* repeat current 4 bars */
         const offset = this.options.music.beatOffset * this.sync.music.subdivision;
         const step = this.sync.stepForFrame(this.frame) - offset;
-        const bar = step - (step % (this.sync.music.subdivision * 4 * 4)) + offset;
+        const bar = step - (step % (this.sync.music.subdivision * this.sync.music.beatsPerBar * 4)) + offset;
         this.cuePoints = [
           this.sync.frameForStep(bar),
-          this.sync.frameForStep(bar + this.sync.music.subdivision * 4 * 4),
+          this.sync.frameForStep(bar + this.sync.music.subdivision * this.sync.music.beatsPerBar * 4),
         ];
       }
       if (e.key === 'g') {
