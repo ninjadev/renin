@@ -142,7 +142,9 @@ export class AudioBar {
     }
     this.obj.add(this.nodeContainer);
     let deepestDepth = 0;
+    let index = 0;
     const recurse = (node: ReninNode, depth = 0, startFrameBound: number, endFrameBound: number) => {
+      const thisIndex = index++;
       const startFrame = Math.max(node.startFrame, startFrameBound);
       const endFrame = Math.min(node.endFrame === -1 ? endFrameBound : node.endFrame, endFrameBound);
       deepestDepth = Math.max(depth, deepestDepth);
@@ -160,7 +162,7 @@ export class AudioBar {
         (this.width - 32) / 2 +
         box.object3d.scale.x / 2;
       box.object3d.position.z = 2;
-      box.object3d.position.y = (boxHeight + boxPadding) * depth;
+      box.object3d.position.y = (boxHeight + boxPadding) * thisIndex;
       const windowSizeIndependentMagicScaleNumber = ((this.width - 32) / 1024) * this.zoomAmount;
       box.getMaterial().map!.repeat.set(windowSizeIndependentMagicScaleNumber * size, 1);
       this.nodeContainer.add(box.object3d);
@@ -187,7 +189,7 @@ export class AudioBar {
       renin.root.startFrame,
       renin.root.endFrame === -1 ? renin.music.getDuration() * 60 : renin.root.endFrame
     );
-    const trackHeight = barHeight + (deepestDepth + 1) * (boxHeight + boxPadding) + boxPadding;
+    const trackHeight = barHeight + (index + 1) * (boxHeight + boxPadding) + boxPadding;
     this.audioTrack.scale.y = trackHeight;
     this.audioTrack.position.y = -getWindowHeight() / 2 + trackHeight / 2 + 16;
     this.cuePoints[0].scale.y = trackHeight;
