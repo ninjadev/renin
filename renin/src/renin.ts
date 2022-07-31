@@ -68,6 +68,7 @@ export class Renin {
   dt: number = 0;
   cuePoints: number[] = [];
   uiNeedsRender: boolean = true;
+  devicePixelRatio = window.devicePixelRatio;
 
   renderTimesCPU: number[] = [...new Array(128)].map(() => 0);
   renderTimesCPUIndex: number = 0;
@@ -357,7 +358,7 @@ export class Renin {
     this.width = width;
     this.height = height;
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(this.devicePixelRatio);
     this.camera.left = -width / 2;
 
     this.camera.right = width / 2;
