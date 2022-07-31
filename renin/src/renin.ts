@@ -499,6 +499,7 @@ export class Renin {
     let needsRenderAfter = false;
     const time = performance.now();
     needsRenderAfter ||= this.fullscreenAnimation.update(this.uiTime);
+    needsRenderAfter ||= this.audioBar.update(this.uiTime);
     this.screen.setSize(
       lerp(640, getWindowWidth(), this.fullscreenAnimation.value),
       lerp(360, (getWindowWidth() / 16) * 9, this.fullscreenAnimation.value)
