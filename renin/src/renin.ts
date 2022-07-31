@@ -237,7 +237,14 @@ export class Renin {
       this.uiNeedsRender = true;
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
-      console.log(e.key);
+      if (e.key === 's') {
+        /* Copy current step number to clipboard */
+        navigator.clipboard.writeText('' + this.sync.stepForFrame(this.frame));
+      }
+      if (e.key === 'f') {
+        /* Copy current frame number to clipboard */
+        navigator.clipboard.writeText('' + this.frame);
+      }
       if (e.key === 'm') {
         const newVolume = this.music.getVolume() === 1 ? 0 : 1;
         setSetting('volume', newVolume);
