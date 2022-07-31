@@ -1,4 +1,4 @@
-import { CanvasTexture } from 'three';
+import { CanvasTexture, sRGBEncoding } from 'three';
 import { bootstrapCss } from './css';
 bootstrapCss();
 
@@ -83,3 +83,4 @@ if (thirdsOverlayCtx) {
 }
 export const thirdsOverlayTexture = new CanvasTexture(thirdsOverlayCanvas);
 thirdsOverlayTexture.needsUpdate = true;
+thirdsOverlayTexture.encoding = sRGBEncoding;

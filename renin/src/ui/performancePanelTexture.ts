@@ -1,4 +1,4 @@
-import { CanvasTexture } from 'three';
+import { CanvasTexture, sRGBEncoding } from 'three';
 import { colors } from './colors';
 import { bootstrapCss } from './css';
 bootstrapCss();
@@ -33,3 +33,4 @@ if (ctx) {
 }
 
 export const performancePanelTexture = new CanvasTexture(canvas);
+performancePanelTexture.encoding = sRGBEncoding;
