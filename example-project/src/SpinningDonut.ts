@@ -20,7 +20,7 @@ import { Renin } from 'renin/lib/renin';
 
 export class SpinningDonut extends ReninNode {
   /* The frame range this node will be active. */
-  startFrame = 3157;
+  startFrame = 6000;
 
   /* Some basic setup for a 3D scene. */
   scene = new Scene();
