@@ -17,7 +17,7 @@ import { ReninNode } from '../ReninNode';
 import { makeRoundedRectangleBufferGeometry, UIBox } from './UIBox';
 import { getWindowHeight, gradientCanvas } from '../utils';
 import audioBarShader from './audioBarShader.glsl';
-import { lerp } from '../interpolations';
+import { clamp, lerp } from '../interpolations';
 import { UIAnimation } from './UIAnimation';
 
 export const barHeight = 48;
@@ -86,30 +86,37 @@ export class AudioBar {
     return lerp(this.zoomStartFrame, this.zoomEndFrame, xInPercent);
   }
 
-  zoom(delta: number) {
+  zoom(delta: number, center: number = 0) {
     if (!this.music) {
       return;
     }
-    this.zoomAmount = Math.max(1, this.zoomAmount * delta);
     const maxFrame = (this.music.getDuration() * 60) | 0;
+    const oldFrameWidth = maxFrame / this.zoomAmount;
+    this.zoomAmount = clamp(1, this.zoomAmount * delta, 100);
     if (this.zoomAmount === 1) {
       this.zoomStartFrame = 0;
       this.zoomEndFrame = maxFrame;
       return;
     }
-    const currentFrame = this.renin.frame;
-    const currentFramePercentage = (currentFrame - this.zoomStartFrame) / (this.zoomEndFrame - this.zoomStartFrame);
+    const centerFrame = this.zoomStartFrame + oldFrameWidth * center;
+    const centerPercentage = (centerFrame - this.zoomStartFrame) / (this.zoomEndFrame - this.zoomStartFrame);
     const newFrameWidth = maxFrame / this.zoomAmount;
-    this.zoomStartFrame = currentFrame - currentFramePercentage * newFrameWidth;
-    this.zoomEndFrame = currentFrame + (1 - currentFramePercentage) * newFrameWidth;
+    this.zoomStartFrame = centerFrame - centerPercentage * newFrameWidth;
+    this.zoomEndFrame = centerFrame + (1 - centerPercentage) * newFrameWidth;
+
+    this.clampView();
   }
 
   pan(delta: number) {
-    const minFrame = 0;
-    const maxFrame = (this.music.getDuration() * 60) | 0;
-
     this.zoomStartFrame += delta * this.zoomAmount * 100;
     this.zoomEndFrame += delta * this.zoomAmount * 100;
+
+    this.clampView();
+  }
+
+  clampView() {
+    const minFrame = 0;
+    const maxFrame = (this.music.getDuration() * 60) | 0;
 
     if (this.zoomStartFrame < minFrame) {
       // Correct over-scroll from the left
