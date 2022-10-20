@@ -105,8 +105,21 @@ export class AudioBar {
   }
 
   pan(delta: number) {
+    const minFrame = 0;
+    const maxFrame = (this.music.getDuration() * 60) | 0;
+
     this.zoomStartFrame += delta * this.zoomAmount * 100;
     this.zoomEndFrame += delta * this.zoomAmount * 100;
+
+    if (this.zoomStartFrame < minFrame) {
+      // Correct over-scroll from the left
+      this.zoomEndFrame += minFrame - this.zoomStartFrame;
+      this.zoomStartFrame = minFrame;
+    } else if (this.zoomEndFrame > maxFrame) {
+      // Correct over-scroll from the right
+      this.zoomStartFrame += maxFrame - this.zoomEndFrame;
+      this.zoomEndFrame = maxFrame;
+    }
   }
 
   update(uiTime: number) {
