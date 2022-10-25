@@ -14,7 +14,7 @@ import {
 import { AudioBar } from './ui/AudioBar';
 import { Sync } from './sync';
 import defaultVert from './default.vert.glsl';
-import { lerp } from './interpolations';
+import { clamp, lerp } from './interpolations';
 import { colors } from './ui/colors';
 import { getWindowHeight, getWindowWidth } from './utils';
 import { ReninNode } from './ReninNode';
@@ -168,11 +168,12 @@ export class Renin {
       e.preventDefault();
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         const deltaY = Math.max(0, 1 - e.deltaY / 1000);
-        this.audioBar.zoom(deltaY);
+        const x = e.screenX - 16;
+        const width = window.innerWidth - 32; // There's a 16px padding around the audio bar
+        this.audioBar.zoom(deltaY, clamp(0, x / width, 1));
       } else {
         const deltaX = e.deltaX / 1000;
         this.audioBar.pan(deltaX);
-        this.audioBar.zoom(1);
       }
       this.uiNeedsRender = true;
     });
