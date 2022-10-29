@@ -182,12 +182,23 @@ export class Renin {
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
       const padding = 16;
-      const audioBarHeight = 64;
       const screenWidth = getWindowWidth();
+
+      let rows = 1;
+      const recurse = (node: ReninNode) => {
+        rows++;
+        if ('children' in node && node.children) {
+          for (const child of Object.values(node.children)) {
+            recurse(child);
+          }
+        }
+      };
+      recurse(this.root);
+      const trackHeight = 48 + rows * 48 + 8;
 
       const audioBarWidth = screenWidth - padding * 2;
       const x = (e.clientX - padding) / audioBarWidth;
-      if (e.clientY > screenHeight - audioBarHeight - padding) {
+      if (e.clientY > screenHeight - trackHeight - padding) {
         if (x >= 0 && x <= 1) {
           /* we click the bar! */
           const clickedFrame = this.audioBar.getClickedFrame(x);
