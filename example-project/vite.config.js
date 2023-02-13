@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     reninPlugin(),
     nodeResolve(),
-    vitePluginString.default({
+    vitePluginString({
       include: ['**/*.vs', '**/*.fs', '**/*.vert', '**/*.frag', '**/*.glsl'],
       compress: false,
     }),

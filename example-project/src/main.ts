@@ -9,6 +9,7 @@ export const renin = new Renin({
     bpm: 114,
     subdivision: 12,
     beatOffset: 4,
+    beatsPerBar: 4,
   },
   root: PostFx,
   productionMode: import.meta.env.PROD,
@@ -16,6 +17,8 @@ export const renin = new Renin({
     powerPreference: 'high-performance',
   },
   toneMapping: ACESFilmicToneMapping,
+  maxWidth: 1920,
+  maxHeight: 1080,
 });
 
 renin.loop();
