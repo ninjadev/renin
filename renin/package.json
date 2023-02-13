@@ -1,6 +1,6 @@
 {
   "name": "renin",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "bin": "cli",
   "module": "lib/renin.js",
   "files": [
@@ -13,7 +13,7 @@
     "@betit/rollup-plugin-rename-extensions": "^0.1.0",
     "@rollup/plugin-typescript": "^9.0.1",
     "@types/node": "^18.11.0",
-    "@types/three": "^0.144.0",
+    "@types/three": "~0.149.0",
     "prettier": "^2.7.1",
     "rollup": "^2.70.2",
     "rollup-plugin-import-css": "^3.0.3",
