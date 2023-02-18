@@ -142,6 +142,7 @@ export class Renin {
     //@ts-ignore
     ColorManagement.legacyMode = false;
     this.options = options;
+    this.isFullscreen = this.options.productionMode;
     this.renderer = new WebGLRenderer(options.rendererOptions);
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = LinearEncoding;
