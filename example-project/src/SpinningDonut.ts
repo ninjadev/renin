@@ -12,7 +12,7 @@ import {
   Scene,
   sRGBEncoding,
   TextureLoader,
-  TorusBufferGeometry,
+  TorusGeometry,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -46,7 +46,7 @@ export class SpinningDonut extends ReninNode {
     envMapTexture.encoding = sRGBEncoding;
 
     this.cube = new Mesh(
-      new TorusBufferGeometry(2, 1, 64, 64),
+      new TorusGeometry(2, 1, 64, 64),
       new MeshPhysicalMaterial({
         clearcoat: 1,
         envMap: envMapTexture,

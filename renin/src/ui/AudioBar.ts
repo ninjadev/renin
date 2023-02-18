@@ -7,7 +7,6 @@ import {
   RepeatWrapping,
   Texture,
   ShaderMaterial,
-  BoxBufferGeometry,
   sRGBEncoding,
 } from 'three';
 import { colors } from './colors';
@@ -25,7 +24,7 @@ const boxHeight = 40;
 const boxPadding = 8;
 const glowSize = 12;
 
-const boxBufferGeometry = new BoxBufferGeometry();
+const boxGeometry = new BoxGeometry();
 
 const uiboxStore: { [key: string]: UIBox } = {};
 const getUIBox = (name: string) => {
@@ -299,7 +298,7 @@ export class AudioBar {
     this.audioBar.setSize(1, barHeight);
     this.obj.add(this.audioBar.object3d);
     this.audioTrack = new Mesh(
-      boxBufferGeometry,
+      boxGeometry,
       new MeshBasicMaterial({
         map: new CanvasTexture(gradientCanvas),
         color: colors.green._500,
@@ -314,19 +313,19 @@ export class AudioBar {
       this.audioTrack.material.map.wrapS = RepeatWrapping;
       this.audioTrack.material.map.wrapT = RepeatWrapping;
     }
-    const line = new Mesh(boxBufferGeometry, new MeshBasicMaterial({ color: colors.green._500 }));
+    const line = new Mesh(boxGeometry, new MeshBasicMaterial({ color: colors.green._500 }));
     line.position.x = 0.5;
     line.scale.x = 2 / glowSize;
     this.audioTrack.add(line);
     this.cuePoints = [
       new Mesh(
-        boxBufferGeometry,
+        boxGeometry,
         new MeshBasicMaterial({
           color: colors.orange._500,
         })
       ),
       new Mesh(
-        boxBufferGeometry,
+        boxGeometry,
         new MeshBasicMaterial({
           color: colors.orange._300,
         })
