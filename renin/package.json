@@ -6,6 +6,12 @@
   "files": [
     "lib"
   ],
+  "homepage": "https://github.com/ninjadev/renin#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ninjadev/renin.git",
+    "directory": "renin"
+  },
   "scripts": {
     "build": "rm -rf lib && rollup -c && cp -r ../example-project lib/example-project && rm -rf lib/example-project/node_modules"
   },
