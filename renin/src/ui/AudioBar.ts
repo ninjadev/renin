@@ -7,7 +7,6 @@ import {
   RepeatWrapping,
   Texture,
   ShaderMaterial,
-  BoxBufferGeometry,
   sRGBEncoding,
 } from 'three';
 import { colors } from './colors';
@@ -25,7 +24,7 @@ const boxHeight = 40;
 const boxPadding = 8;
 const glowSize = 12;
 
-const boxBufferGeometry = new BoxBufferGeometry();
+const boxBufferGeometry = new BoxGeometry();
 
 const uiboxStore: { [key: string]: UIBox } = {};
 const getUIBox = (name: string) => {
