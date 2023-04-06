@@ -29,9 +29,9 @@ export class Music {
 
   setPlaybackRate(playbackRate: number) {
     const shouldPlay = !this.paused;
-    this.pause();
     this.playbackRate = playbackRate;
     if (shouldPlay) {
+      this.pause();
       this.play();
     }
   }
