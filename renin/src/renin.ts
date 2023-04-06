@@ -598,7 +598,7 @@ export class Renin {
       const step = this.sync.stepForFrame(this.frame);
       const musicTime = this.music.getCurrentTime();
       const items: [string, string | number][] = [
-        ['Bar', (step / this.options.music.subdivision / 4) | 0],
+        ['Bar', (step / this.options.music.subdivision / this.options.music.beatsPerBar) | 0],
         ['Beat', (step / this.options.music.subdivision) | 0],
         ['Step', step],
         ['Frame', this.frame],
