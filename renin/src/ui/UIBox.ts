@@ -1,5 +1,5 @@
 import {
-  BoxBufferGeometry,
+  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   Material,
@@ -119,12 +119,12 @@ export function makeRoundedRectangleBufferGeometry(
   return geometry;
 }
 
-const geometry = new BoxBufferGeometry();
+const geometry = new BoxGeometry();
 
 export class UIBox<MaterialType extends Material = MeshBasicMaterial> {
   object3d = new Object3D();
   private mesh: Mesh<BufferGeometry, MaterialType>;
-  private shadow: Mesh<BoxBufferGeometry, RawShaderMaterial>;
+  private shadow: Mesh<BoxGeometry, RawShaderMaterial>;
   options: UIBoxOptions<MaterialType>;
 
   constructor(options: Partial<UIBoxOptions<MaterialType>>) {
