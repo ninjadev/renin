@@ -180,6 +180,10 @@ export class Renin {
     });
 
     this.renderer.domElement.addEventListener('click', (e) => {
+      if (this.isFullscreen) {
+        return;
+      }
+
       this.music.audioContext.resume();
       const screenHeight = getWindowHeight();
       const padding = 16;
