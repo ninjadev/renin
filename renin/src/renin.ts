@@ -510,7 +510,7 @@ export class Renin {
   update(frame: number) {
     const time = performance.now();
     this.sync.update(frame);
-    this.root._update(frame);
+    this.root._update(frame, this);
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.updateTimes[this.updateTimesIndex] = dt;
