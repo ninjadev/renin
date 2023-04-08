@@ -14,9 +14,14 @@ export class Sync {
     this.music = music;
   }
 
+  /**
+   * Outputs a number between 0 and 1, signifying the progress between two "flashes", synced to the music.
+   * "stepStride" denotes the number of steps (subdivisions of a beat) between each flash
+   * "stepOffset" offsets the flashes from the start of a beat.
+   */
   flash(frame: number, stepStride: number, stepOffset: number = 0) {
     const step = this.stepForFrame(frame);
-    const startStep = (((step - stepOffset) / stepStride) | 0) * stepStride;
+    const startStep = (((step - stepOffset) / stepStride) | 0) * stepStride + stepOffset;
     const startFrame = this.frameForStep(startStep);
     const endFrame = this.frameForStep(startStep + stepStride);
     return (frame - startFrame) / (endFrame - startFrame);
