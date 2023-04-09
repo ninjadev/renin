@@ -4,6 +4,7 @@ import reninPlugin from 'renin/lib/ui/vite.mjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 export default defineConfig({
+  base: '',
   plugins: [
     reninPlugin(),
     nodeResolve(),
