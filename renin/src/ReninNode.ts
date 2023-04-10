@@ -21,7 +21,7 @@ export class ReninNode {
    * update stage. Update is guaranteed to be called exactly 60 times
    * per second. */
   // @ts-ignore
-  update(frame: number): void {}
+  update(frame: number, renin: Renin): void {}
 
   /* Subclasses can implement this if they need code to happen in the
    * render stage. Render tried to be called as often as needed, but has
@@ -41,17 +41,17 @@ export class ReninNode {
   }
 
   /* The actual update function. Subclasses don't need to override this. */
-  public _update(frame: number) {
+  public _update(frame: number, renin: Renin) {
     this.isActive = !(frame < this.startFrame || (frame >= this.endFrame && this.endFrame !== -1));
     if (!this.isActive) {
       return;
     }
     if ('children' in this) {
       for (const child of Object.values(this.children || {})) {
-        child._update(frame);
+        child._update(frame, renin);
       }
     }
-    this.update(frame);
+    this.update(frame, renin);
   }
 
   /* The actual render function. Subclasses don't need to override this,
