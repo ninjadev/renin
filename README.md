@@ -40,6 +40,15 @@ As such, it should be able to make a demo with this already :tada:
 
 Rendering to video has not been implemented yet.
 
+
+<br/>
+
+# Known renin demos
+
+- [Ninjadev - The Tale of the Bluebird & the Dragon](https://www.pouet.net/prod.php?which=91820)
+- [Ninjadev - Crank You Very Much](https://www.pouet.net/prod.php?which=94165)
+- [Sigveseb / Ninjadev - FILL_ER](https://www.pouet.net/prod.php?which=94133)
+
 <br/>
 
 ## How is renin different compared to nin?
