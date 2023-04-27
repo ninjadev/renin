@@ -7,6 +7,7 @@ import {
   Scene,
   ShaderMaterial,
   sRGBEncoding,
+  Texture,
   WebGLRenderer,
   WebGLRendererParameters,
   WebGLRenderTarget,
@@ -153,6 +154,7 @@ export class Renin {
    * for short clips of a few seconds. */
   mediaRecorder: MediaRecorder | null = null;
   oldIsFullscreen: boolean = false;
+  debugTexture: Texture | null;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -746,7 +748,7 @@ export class Renin {
     }
     this.framePanelTexture.needsUpdate = true;
 
-    this.screen.getMaterial().uniforms.screen.value = this.screenRenderTarget.texture;
+    this.screen.getMaterial().uniforms.screen.value = this.debugTexture ?? this.screenRenderTarget.texture;
     this.screen.getMaterial().uniforms.thirdsOverlay.value = thirdsOverlayTexture;
     this.screen.getMaterial().uniformsNeedUpdate = true;
     this.scene.background = new Color(colors.gray._700);
