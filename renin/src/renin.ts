@@ -38,6 +38,13 @@ export const defaultVertexShader = defaultVert;
 const framePanelWidth = 128 + 32;
 const framePanelHeight = 24 * 6;
 
+/* Returns the largest possible ratio rectangle that fits within the given width and height. */
+function fit(width: number, height: number, ratio: number) {
+  const w = Math.min(width, height * ratio);
+  const h = w / ratio;
+  return { width: w, height: h };
+}
+
 registerErrorOverlay();
 
 export interface Options {
@@ -136,6 +143,15 @@ export class Renin {
   queryIsActive: boolean = false;
   options: Options;
   needsSkipBecauseTabHasBeenInTheBackground = false;
+  demoWidth: number = 640;
+  demoHeight: number = 360;
+
+  /* If there is a media recorder, we are recording a quick'n'dirty video capture
+   * for easy sharing. This not the offline "perfect fps" recording feature that can
+   * be used to make a full video capture of the demo for youtube. This is just intended
+   * for short clips of a few seconds. */
+  mediaRecorder: MediaRecorder | null = null;
+  oldIsFullscreen: boolean = false;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -252,10 +268,21 @@ export class Renin {
       this.resize(getWindowWidth(), getWindowHeight());
     });
 
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'r' && this.mediaRecorder) {
+        this.stopRealTimeScreenRecording();
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
       this.uiNeedsRender = true;
       this.music.audioContext.resume();
       const backskipSlop = this.music.paused ? 0 : 20;
+
+      if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        this.startRealTimeScreenRecording();
+      }
+
       if (e.key === 's') {
         /* Copy current step number to clipboard */
         navigator.clipboard.writeText('' + this.sync.stepForFrame(this.frame));
@@ -392,6 +419,94 @@ export class Renin {
     });
   }
 
+  startRealTimeScreenRecording() {
+    if (this.mediaRecorder) {
+      return;
+    }
+
+    this.oldIsFullscreen = this.isFullscreen;
+    this.isFullscreen = true;
+    this.fullscreenAnimation.transition(1, 0, 0);
+    this.fullscreenAnimation.value = 1;
+    const ball = document.createElement('div');
+    ball.style.width = '16px';
+    ball.style.height = '16px';
+    ball.style.borderRadius = '999px';
+    ball.style.backgroundColor = 'white';
+    ball.style.marginRight = '8px';
+    ball.style.marginLeft = '-8px';
+    const text = document.createElement('div');
+    text.textContent = 'Recording';
+    const recordingOverlay = document.createElement('div');
+    recordingOverlay.appendChild(ball);
+    recordingOverlay.style.position = 'fixed';
+    recordingOverlay.style.top = '16px';
+    recordingOverlay.style.left = '16px';
+    recordingOverlay.style.padding = '8px 16px';
+    recordingOverlay.style.backgroundColor = 'red';
+    recordingOverlay.style.color = 'white';
+    recordingOverlay.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.16)';
+    recordingOverlay.style.fontFamily = 'Barlow, sans-serif';
+    recordingOverlay.style.borderRadius = '999px';
+    recordingOverlay.style.display = 'flex';
+    recordingOverlay.style.alignItems = 'center';
+    recordingOverlay.style.justifyContent = 'center';
+    recordingOverlay.id = 'recording-overlay';
+    recordingOverlay.style.fontWeight = 'bold';
+    recordingOverlay.appendChild(ball);
+    recordingOverlay.appendChild(text);
+    document.body.appendChild(recordingOverlay);
+
+    this.uiNeedsRender = true;
+    const width = Math.min(getWindowWidth(), Math.max(1280, this.demoWidth));
+    const height = Math.min(getWindowWidth(), Math.max(720, this.demoHeight));
+    const fitted = fit(width, height, 16 / 9);
+    this.resize(fitted.width, fitted.height);
+
+    const horizontal = (getWindowWidth() - fitted.width) / 2;
+    const vertical = (getWindowHeight() - fitted.height) / 2;
+    this.renderer.domElement.style.top = `${vertical}px`;
+    this.renderer.domElement.style.left = `${horizontal}px`;
+    this.renderer.domElement.style.right = `${horizontal}px`;
+    this.renderer.domElement.style.bottom = `${vertical}px`;
+
+    this.mediaRecorder = new MediaRecorder(this.renderer.domElement.captureStream(60), {
+      mimeType: 'video/webm; codecs=vp9',
+    });
+    this.mediaRecorder.start();
+    const chunks = [];
+    this.mediaRecorder.ondataavailable = (e) => {
+      chunks.push(e.data);
+    };
+    this.mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date().toISOString().replace(/:/g, '-');
+      a.download = `renin-${now}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.mediaRecorder = null;
+    };
+  }
+
+  stopRealTimeScreenRecording() {
+    this.isFullscreen = this.oldIsFullscreen;
+    this.fullscreenAnimation.transition(this.isFullscreen ? 1 : 0, 0, 0);
+    this.mediaRecorder.stop();
+    this.uiNeedsRender = true;
+    this.resize(getWindowWidth(), getWindowHeight());
+    this.renderer.domElement.style.top = '0px';
+    this.renderer.domElement.style.left = '0px';
+    this.renderer.domElement.style.right = '0px';
+    this.renderer.domElement.style.bottom = '0px';
+    const recordingOverlay = document.getElementById('recording-overlay');
+    if (recordingOverlay) {
+      document.body.removeChild(recordingOverlay);
+    }
+  }
+
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
@@ -405,20 +520,20 @@ export class Renin {
     this.camera.updateProjectionMatrix();
     this.audioBar.resize(width, height);
 
-    let demoWidth = this.options.maxWidth ? Math.min(width, this.options.maxWidth) : width;
-    let demoHeight = (demoWidth / 16) * 9;
-    if (demoHeight > height) {
-      demoHeight = this.options.maxHeight ? Math.min(height, this.options.maxHeight) : height;
-      demoWidth = (demoHeight / 9) * 16;
+    this.demoWidth = this.options.maxWidth ? Math.min(width, this.options.maxWidth) : width;
+    this.demoHeight = (this.demoWidth / 16) * 9;
+    if (this.demoHeight > height) {
+      this.demoHeight = this.options.maxHeight ? Math.min(height, this.options.maxHeight) : height;
+      this.demoWidth = (this.demoHeight / 9) * 16;
     }
     if (!this.isFullscreen) {
-      demoWidth = 640;
-      demoHeight = 360;
+      this.demoWidth = 640;
+      this.demoHeight = 360;
     }
 
-    this.screenRenderTarget.setSize(demoWidth, demoHeight);
+    this.screenRenderTarget.setSize(this.demoWidth, this.demoHeight);
     this.fullscreenAnimation.transition(this.isFullscreen ? 1 : 0, 0.15, this.uiTime);
-    this.root._resize(demoWidth, demoHeight);
+    this.root._resize(this.demoWidth, this.demoHeight);
 
     this.render();
     this.uiUpdate();
@@ -544,13 +659,13 @@ export class Renin {
       lerp(360, screenBottom - screenTop, this.fullscreenAnimation.value)
     );
     this.screen.object3d.position.x = lerp(
-      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - 16,
-      getWindowWidth() / 2 - this.screen.object3d.scale.x / 2 - (this.width - screenRight),
+      this.width / 2 - this.screen.object3d.scale.x / 2 - 16,
+      this.width / 2 - this.screen.object3d.scale.x / 2 - (this.width - screenRight),
       this.fullscreenAnimation.value
     );
     this.screen.object3d.position.y = lerp(
-      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - 16,
-      getWindowHeight() / 2 - this.screen.object3d.scale.y / 2 - screenTop,
+      this.height / 2 - this.screen.object3d.scale.y / 2 - 16,
+      this.height / 2 - this.screen.object3d.scale.y / 2 - screenTop,
       this.fullscreenAnimation.value
     );
     this.screen.object3d.position.z = 90;
