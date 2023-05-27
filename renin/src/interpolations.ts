@@ -28,3 +28,14 @@ export function elasticOut(b: number, c: number, d: number, t: number) {
   const tc = ts * t;
   return b + c * (33 * tc * ts + -106 * ts * ts + 126 * tc + -67 * ts + 15 * t);
 }
+
+/**
+ * Transition from 0 to 1 from a specific startFrame for duration duration.
+ * @param frame The current frame
+ * @param duration How many frames the transition takes
+ * @param startFrame  What frame to start the transition at
+ * @returns value in [0, 1) representing the progression into the interval.
+ */
+export function transitionFromFrame(frame: number, duration: number, startFrame: number) {
+  return lerp(0, 1, (frame - startFrame) / duration);
+}
