@@ -32,6 +32,7 @@ import { getSetting, setSetting } from './ui/storedSettings';
 /* otherwise it won't be added to the build */
 export * as vite from './ui/vite';
 export * as ReninNode from './ReninNode';
+export * as render from './render';
 
 export const defaultVertexShader = defaultVert;
 
