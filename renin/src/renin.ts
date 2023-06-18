@@ -471,9 +471,18 @@ export class Renin {
     this.renderer.domElement.style.right = `${horizontal}px`;
     this.renderer.domElement.style.bottom = `${vertical}px`;
 
-    this.mediaRecorder = new MediaRecorder(this.renderer.domElement.captureStream(60), {
-      mimeType: 'video/webm; codecs=vp9',
-    });
+    const audioStreamNode = this.music.audioContext.createMediaStreamDestination();
+    this.music.volumeNode.connect(audioStreamNode);
+
+    this.mediaRecorder = new MediaRecorder(
+      new MediaStream([
+        this.renderer.domElement.captureStream(60).getVideoTracks()[0],
+        audioStreamNode.stream.getAudioTracks()[0],
+      ]),
+      {
+        mimeType: 'video/webm; codecs=vp9',
+      }
+    );
     this.mediaRecorder.start();
     const chunks = [];
     this.mediaRecorder.ondataavailable = (e) => {
