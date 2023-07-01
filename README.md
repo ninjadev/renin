@@ -28,6 +28,14 @@ yarn run dev
 
 Now visit localhost:3000 in Chrome to start renin. Try modifing the source in mydemo/src/ to get started. Happy hacking!
 
+## Build 🔨🔧
+
+```shell
+cd renin
+yarn build
+```
+
+On Windows, you might have to manually run the commands defined in `"build"` in package.json instead.
 
 <br/>
 
