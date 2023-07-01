@@ -61,6 +61,7 @@ export interface Options {
   root: typeof ReninNode;
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
+  aspectRatio: number;
   maxWidth?: number;
   maxHeight?: number;
 }
@@ -240,7 +241,7 @@ export class Renin {
     this.scene.add(this.screenBackdrop.object3d);
     this.scene.add(this.camera);
     this.screen.object3d.scale.x = 640;
-    this.screen.object3d.scale.y = 360;
+    this.screen.object3d.scale.y = 640 / this.options.aspectRatio;
 
     this.framePanelCanvas = document.createElement('canvas');
     this.framePanelTexture = new CanvasTexture(this.framePanelCanvas);
@@ -463,7 +464,7 @@ export class Renin {
     this.uiNeedsRender = true;
     const width = Math.min(getWindowWidth(), Math.max(1280, this.demoWidth));
     const height = Math.min(getWindowWidth(), Math.max(720, this.demoHeight));
-    const fitted = fit(width, height, 16 / 9);
+    const fitted = fit(width, height, this.options.aspectRatio);
     this.resize(fitted.width, fitted.height);
 
     const horizontal = (getWindowWidth() - fitted.width) / 2;
@@ -533,14 +534,14 @@ export class Renin {
     this.audioBar.resize(width, height);
 
     this.demoWidth = this.options.maxWidth ? Math.min(width, this.options.maxWidth) : width;
-    this.demoHeight = (this.demoWidth / 16) * 9;
+    this.demoHeight = this.demoWidth / this.options.aspectRatio;
     if (this.demoHeight > height) {
       this.demoHeight = this.options.maxHeight ? Math.min(height, this.options.maxHeight) : height;
-      this.demoWidth = (this.demoHeight / 9) * 16;
+      this.demoWidth = this.demoHeight * this.options.aspectRatio;
     }
     if (!this.isFullscreen) {
       this.demoWidth = 640;
-      this.demoHeight = 360;
+      this.demoHeight = this.demoWidth / this.options.aspectRatio;
     }
 
     this.screenRenderTarget.setSize(this.demoWidth, this.demoHeight);
@@ -655,20 +656,24 @@ export class Renin {
     needsRenderAfter ||= this.audioBar.update(this.uiTime);
 
     let demoWidth = this.width;
-    let demoHeight = (demoWidth / 16) * 9;
+    let demoHeight = demoWidth / this.options.aspectRatio;
     if (demoHeight > this.height) {
       demoHeight = this.height;
-      demoWidth = (demoHeight / 9) * 16;
+      demoWidth = demoHeight * this.options.aspectRatio;
     }
 
     const screenLeft = lerp(this.width - 640 - 16, (this.width - demoWidth) / 2, this.fullscreenAnimation.value);
     const screenRight = lerp(this.width - 16, demoWidth + (this.width - demoWidth) / 2, this.fullscreenAnimation.value);
     const screenTop = lerp(16, (this.height - demoHeight) / 2, this.fullscreenAnimation.value);
-    const screenBottom = lerp(360 + 16, demoHeight + (this.height - demoHeight) / 2, this.fullscreenAnimation.value);
+    const screenBottom = lerp(
+      640 / this.options.aspectRatio + 16,
+      demoHeight + (this.height - demoHeight) / 2,
+      this.fullscreenAnimation.value
+    );
 
     this.screen.setSize(
       lerp(640, screenRight - screenLeft, this.fullscreenAnimation.value),
-      lerp(360, screenBottom - screenTop, this.fullscreenAnimation.value)
+      lerp(640 / this.options.aspectRatio, screenBottom - screenTop, this.fullscreenAnimation.value)
     );
     this.screen.object3d.position.x = lerp(
       this.width / 2 - this.screen.object3d.scale.x / 2 - 16,
