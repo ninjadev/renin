@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  run_demo:
+    image: 'node:20.2'
+    container_name: ninjadev_jkpop
+    working_dir: /demos/ninjadev/demo
+    ports:
+      - '3000:3000'
+    volumes:
+      - './:/demos/ninjadev/demo'
+      - '../renin:/demos/ninjadev/renin'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd /demos/ninjadev/demo
+        yarn run dev --host --port 3000
+
+  clean_build_demo:
+    image: 'node:20.2'
+    profiles:
+      - clean_build_demo
+    ports:
+      - '3000:3000'
+    volumes:
+      - './:/demos/ninjadev/demo'
+      - '../renin:/demos/ninjadev/renin'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        rm -rf /demos/ninjadev/demo/node_modules
+        cd /demos/ninjadev/demo
+        yarn install
+        yarn run dev --host --port 3000
+
+  clean_build_all:
+    image: 'node:20.2'
+    profiles:
+      - clean_build_all
+    ports:
+      - '3000:3000'
+    volumes:
+      - './:/demos/ninjadev/demo'
+      - '../renin:/demos/ninjadev/renin'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        rm -rf /demos/ninjadev/renin/node_modules
+        rm -rf /demos/ninjadev/renin/renin/node_modules
+        rm -rf /demos/ninjadev/demo/node_modules
+        cd /demos/ninjadev/renin/renin
+        yarn install
+        yarn build
+        cd /demos/ninjadev/demo
+        yarn install
+        yarn run dev --host --port 3000
+
+  # debug_node:
+  #   # image: arm64v8/node
+  #   image: 'node:20.2'
+  #   container_name: debug_node
+  #   network_mode: host
+  #   working_dir: /demos/ninjadev/renin/renin
+  #   tty: true
+  #   volumes:
+  #     - './:/demos/ninjadev/demo'
+  #     - '../renin:/demos/ninjadev/renin'
