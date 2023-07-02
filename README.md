@@ -14,7 +14,7 @@
 <p align="center">
 Renin is a browser-based demo creation library and tool built on top of <a href="https://github.com/mrdoob/three.js/">Three.js</a> and <a href="https://vitejs.dev">Vite</a>.<br/>It is the successor to <a href="https://github.com/ninjadev/nin">nin</a>, Ninjadev's old demo tool.
 </p>
-  
+
 <br/>
 
 ## Getting started
@@ -27,6 +27,46 @@ yarn run dev
 ```
 
 Now visit localhost:3000 in Chrome to start renin. Try modifing the source in mydemo/src/ to get started. Happy hacking!
+
+### First time setup for demo in new repo
+
+If you are making or running a renin-demo from a separate repository, you will need to place your demo project/repo folder adjacent to the renin repo directory.
+
+<details>
+<summary>Folder/repo structure illustration</summary>
+
+```
+projects/
+├─ renin/
+|  ├─ .git/
+|  ├─ renin/
+|  |  ├─ node_modules/
+|  |  ├─ src/
+|  ├─ ...
+├─ new-demo/
+|  ├─ .git/
+|  ├─ node_modules/
+|  ├─ src/
+|  ├─ ...
+```
+</details>
+<br>
+
+When you are setting this up for the first time, it's imortant that you restore packages for and build renin before restoring packages for your new demo.
+Yarn caches somewhat agressively, and your repeated attempts to rebuild your new demo will fail untill you delte node_modules, wich basically is starting from scratch build-wise.
+
+The setup therefore becomes
+
+```shell
+cd projects/renin/renin
+
+yarn install
+yarn build
+
+cd projects/new-demo
+
+yarn install
+```
 
 ## Build 🔨🔧
 
