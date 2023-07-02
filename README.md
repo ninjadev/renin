@@ -3,7 +3,9 @@
 <p align=center> <a href="#getting-started">Getting started</a> • <a href="#project-status">Project status</a></p>
 
 
-> <sup>DISCLAIMER: This is a tool created for internal use by Ninjadev, and is open sourced to share ideas with and get feedback from the community. You are free to use it, according to the License, but we will not necessarily provide support and may at any time add, change or remove features as we require for our productions.</sup>
+> <sup>DISCLAIMER: This is a tool created for internal use by Ninjadev, and is open sourced to share ideas with and get
+> feedback from the community. You are free to use it, according to the License, but we will not necessarily provide
+> support and may at any time add, change or remove features as we require for our productions.</sup>
 
 <pre align="center">
 <img src="screenshot.png" />
@@ -14,7 +16,7 @@
 <p align="center">
 Renin is a browser-based demo creation library and tool built on top of <a href="https://github.com/mrdoob/three.js/">Three.js</a> and <a href="https://vitejs.dev">Vite</a>.<br/>It is the successor to <a href="https://github.com/ninjadev/nin">nin</a>, Ninjadev's old demo tool.
 </p>
-  
+
 <br/>
 
 ## Getting started
@@ -50,6 +52,34 @@ Rendering to video has not been implemented yet.
 
 
 <br/>
+
+## Keyboard shortcuts
+
+| Key      | Description                                                                                                       |
+|----------|-------------------------------------------------------------------------------------------------------------------|
+| R (hold) | Experimental: Record a video snippet while playing. After you release the button, a .webm file will be downloaded |
+| S        | Copy current step number to clipboard                                                                             |
+| F        | Copy current frame number to clipboard                                                                            |
+| M        | Mute/unmute music                                                                                                 |
+| O        | Enabled/disable thirds overlay                                                                                    |
+| Enter    | Toggle fullscreen                                                                                                 |
+| Space    | Play/pause                                                                                                        |
+| V        | Repeat current beat                                                                                               |
+| B        | Repeat current bar                                                                                                |
+| N        | Repeat current 4 bars                                                                                             |
+| G        | Set cue point for loop                                                                                            |
+| shift+J  | Go back one frame                                                                                                 |
+| shift+K  | Go forward one frame                                                                                              |
+| shift+H  | Go to start                                                                                                       |
+| L        | Go forward one beat                                                                                               |
+| J        | Go back one beat                                                                                                  |
+| K        | Go forward one beat                                                                                               |
+| H        | Go back one beat                                                                                                  |
+| 6        | Set playback rate to 0.25                                                                                         |
+| 7        | Set playback rate to 0.5                                                                                          |
+| 8        | Set playback rate to 2                                                                                            |
+| 9        | Set playback rate to 4                                                                                            |
+| 0        | Set playback rate to 1                                                                                            |
 
 # Known renin demos
 
