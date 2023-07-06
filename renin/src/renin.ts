@@ -3,6 +3,7 @@ import {
   Color,
   FloatType,
   LinearEncoding,
+  NoToneMapping,
   OrthographicCamera,
   Scene,
   ShaderMaterial,
@@ -60,7 +61,6 @@ export interface Options {
   root: typeof ReninNode;
   productionMode: boolean;
   rendererOptions?: WebGLRendererParameters;
-  toneMapping: WebGLRenderer['toneMapping'];
   maxWidth?: number;
   maxHeight?: number;
 }
@@ -787,21 +787,21 @@ export class Renin {
     this.performancePanel.getMaterial().uniforms.overlay.value = performancePanelTexture;
     this.performancePanel.getMaterial().uniformsNeedUpdate = true;
     const oldEncoding = this.renderer.outputEncoding;
+    const oldToneMapping = this.renderer.toneMapping;
+    const oldToneMappingExposure = this.renderer.toneMappingExposure;
     this.renderer.outputEncoding = sRGBEncoding;
+    this.renderer.toneMapping = NoToneMapping;
+    this.renderer.toneMappingExposure = 1;
     this.renderer.render(this.scene, this.camera);
     this.renderer.outputEncoding = oldEncoding;
+    this.renderer.toneMapping = oldToneMapping;
+    this.renderer.toneMappingExposure = oldToneMappingExposure;
   }
 
   render() {
     if (this.options.productionMode) {
       this.renderer.setRenderTarget(null);
-      const oldEncoding = this.renderer.outputEncoding;
-      const oldToneMapping = this.renderer.toneMapping;
-      this.renderer.toneMapping = this.options.toneMapping;
-      this.renderer.outputEncoding = sRGBEncoding;
       this.root._render(this.frame, this.renderer, this);
-      this.renderer.outputEncoding = oldEncoding;
-      this.renderer.toneMapping = oldToneMapping;
       return;
     }
     const time = performance.now();
@@ -837,10 +837,7 @@ export class Renin {
     }
 
     this.renderer.setRenderTarget(this.screenRenderTarget);
-    const oldToneMapping = this.renderer.toneMapping;
-    this.renderer.toneMapping = this.options.toneMapping;
     this.root._render(this.frame, this.renderer, this);
-    this.renderer.toneMapping = oldToneMapping;
     const dt = performance.now() - time;
     if (!this.music.paused) {
       this.renderTimesCPU[this.renderTimesCPUIndex] = dt;

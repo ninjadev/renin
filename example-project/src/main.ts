@@ -1,5 +1,4 @@
 import music from './music.ogg';
-import { ACESFilmicToneMapping } from 'three';
 import { Renin } from 'renin/lib/renin';
 import { PostFx } from './PostFx';
 
@@ -15,7 +14,6 @@ export const renin = new Renin({
   rendererOptions: {
     powerPreference: 'high-performance',
   },
-  toneMapping: ACESFilmicToneMapping,
 });
 
 renin.loop();
