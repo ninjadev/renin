@@ -155,6 +155,7 @@ export class Renin {
   mediaRecorder: MediaRecorder | null = null;
   oldIsFullscreen: boolean = false;
   debugTexture: Texture | null;
+  demoNeedsRender: boolean = true;
 
   constructor(options: Options) {
     Renin.instance = this;
@@ -588,7 +589,6 @@ export class Renin {
     this.uiOldTime = this.uiTime;
     this.uiTime = Date.now() / 1000;
     this.uiDt += this.uiTime - this.uiOldTime;
-    let demoNeedsRender = false;
     const frameLength = 1 / 60;
 
     if (this.needsSkipBecauseTabHasBeenInTheBackground) {
@@ -602,7 +602,7 @@ export class Renin {
       this.dt -= frameLength;
       this.update(this.frame);
       this.frame++;
-      demoNeedsRender = true;
+      this.demoNeedsRender = true;
 
       if (this.cuePoints.length === 2 && this.frame >= this.cuePoints[1]) {
         this.jumpToFrame(this.cuePoints[0]);
@@ -612,14 +612,15 @@ export class Renin {
       this.uiDt -= frameLength;
       this.uiNeedsRender ||= this.uiUpdate();
     }
-    if (demoNeedsRender) {
+    if (this.demoNeedsRender) {
       this.render();
     }
-    this.uiNeedsRender ||= demoNeedsRender;
+    this.uiNeedsRender ||= this.demoNeedsRender;
     if (this.uiNeedsRender) {
       this.uiRender();
       this.uiNeedsRender = false;
     }
+    this.demoNeedsRender = false;
   };
 
   jumpToFrame(frame: number) {
