@@ -14,6 +14,7 @@ export const renin = new Renin({
   rendererOptions: {
     powerPreference: 'high-performance',
   },
+  aspectRatio: 16.0/9,
 });
 
 renin.loop();
