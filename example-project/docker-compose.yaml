@@ -5,6 +5,8 @@ services:
     image: 'node:20.2'
     container_name: ninjadev_jkpop
     working_dir: /demos/ninjadev/demo
+    networks:
+      - demonet
     ports:
       - '3000:3000'
     volumes:
@@ -21,6 +23,8 @@ services:
     image: 'node:20.2'
     profiles:
       - clean_build_demo
+    networks:
+      - demonet
     ports:
       - '3000:3000'
     volumes:
@@ -39,6 +43,8 @@ services:
     image: 'node:20.2'
     profiles:
       - clean_build_all
+    networks:
+      - demonet
     ports:
       - '3000:3000'
     volumes:
@@ -68,3 +74,7 @@ services:
   #   volumes:
   #     - './:/demos/ninjadev/demo'
   #     - '../renin:/demos/ninjadev/renin'
+
+networks:
+  demonet:
+    driver: bridge
