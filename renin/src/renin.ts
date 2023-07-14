@@ -363,7 +363,9 @@ export class Renin {
         }
       }
       if (e.key === 'J') {
-        this.jumpToFrame(this.frame - 1);
+        if(this.frame > 0){
+          this.jumpToFrame(this.frame - 1);
+        }
       }
       if (e.key === 'K') {
         this.jumpToFrame(this.frame + 1);
