@@ -111,10 +111,10 @@ Rendering to video has not been implemented yet.
 | shift+J  | Go back one frame                                                                                                 |
 | shift+K  | Go forward one frame                                                                                              |
 | shift+H  | Go to start                                                                                                       |
-| L        | Go forward one beat                                                                                               |
+| L        | Go forward 4 beats                                                                                               |
 | J        | Go back one beat                                                                                                  |
 | K        | Go forward one beat                                                                                               |
-| H        | Go back one beat                                                                                                  |
+| H        | Go back 4 beats                                                                                                   |
 | 6        | Set playback rate to 0.25                                                                                         |
 | 7        | Set playback rate to 0.5                                                                                          |
 | 8        | Set playback rate to 2                                                                                            |
