@@ -104,10 +104,11 @@ Rendering to video has not been implemented yet.
 | O        | Enabled/disable thirds overlay                                                                                    |
 | Enter    | Toggle fullscreen                                                                                                 |
 | Space    | Play/pause                                                                                                        |
-| V        | Repeat current beat                                                                                               |
-| B        | Repeat current bar                                                                                                |
-| N        | Repeat current 4 bars                                                                                             |
-| G        | Set cue point for loop                                                                                            |
+| V        | Toggle repeat of current beat                                                                                     |
+| B        | Toggle repeat of current bar                                                                                      |
+| N        | Toggle repeat of current 4 bars                                                                                   |
+| G        | Set cue point for loop. The first time you press it, it sets the "go back here point". Second time sets "go back
+             once you reach this point". Third time removes the points.                                                        |
 | shift+J  | Go back one frame                                                                                                 |
 | shift+K  | Go forward one frame                                                                                              |
 | shift+H  | Go to start                                                                                                       |
