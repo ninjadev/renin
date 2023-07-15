@@ -64,6 +64,34 @@ services:
         yarn install
         yarn run dev --host --port 3000
 
+  build_and_export:
+    image: 'node:20.2'
+    profiles:
+      - build_and_export
+    # networks: [ demonet ]
+    # ports:
+    #   - '3000:3000'
+    volumes:
+      - './:/demos/ninjadev/demo'
+      - '../renin:/demos/ninjadev/renin'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd /demos/ninjadev/demo
+        rm -rf /demos/ninjadev/demo/dist/
+        yarn build
+
+  host_final_built_demo:
+    image: 'nginx'
+    profiles:
+      - host_final_built_demo
+    # networks: [ demonet ]
+    ports:
+      - '3001:80'
+    volumes:
+      - './dist/:/usr/share/nginx/html'
+
   # debug_node:
   #   # image: arm64v8/node
   #   image: 'node:20.2'
