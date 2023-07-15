@@ -70,7 +70,37 @@ cd projects/new-demo
 yarn install
 ```
 
-## Build 🔨🔧
+### Build and export demo
+
+Once you feel that you're done, you might want to generate a version without all the tracks and debug tooling.
+To achieve this, you simply need to run `yarn build` within your demo.
+
+If you do this on a separate machine, the full path from having cloned renin and your new demo becomes like this
+
+```shell
+cd projects/renin/renin
+
+yarn install
+yarn build
+
+cd projects/new-demo
+
+yarn install
+yarn build
+```
+
+At this point you will get a folder named "dist/" in your demo project.
+It will contain an index.html file, and a directory with all needed assets.
+To run it you unfortunately can't just trust the content you made yourself locally on your machine and open it in a browser directly.
+You'll have to spin it up in a server and access it through localhost.
+The snippet below should work reasonably well cross plattform and enable you to enjoy your work at http://localhost:3000.
+
+```shell
+cd projects/new-demo/dist
+python3 -m http.server 3000
+```
+
+## Build renin 🔨🔧
 
 ```shell
 cd renin
