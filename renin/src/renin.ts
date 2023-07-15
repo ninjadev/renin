@@ -358,12 +358,15 @@ export class Renin {
         const quantizedStep = step - (step % this.sync.music.subdivision);
         if (this.cuePoints.length < 2) {
           this.cuePoints.push(this.sync.frameForStep(quantizedStep));
+          this.cuePoints = this.cuePoints.sort();
         } else {
           this.cuePoints = [];
         }
       }
       if (e.key === 'J') {
-        this.jumpToFrame(this.frame - 1);
+        if(this.frame > 0){
+          this.jumpToFrame(this.frame - 1);
+        }
       }
       if (e.key === 'K') {
         this.jumpToFrame(this.frame + 1);
