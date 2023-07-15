@@ -122,6 +122,28 @@ Rendering to video has not been implemented yet.
 | 9        | Set playback rate to 4                                                                                            |
 | 0        | Set playback rate to 1                                                                                            |
 
+# Debugging renin
+
+Typically, to debug renin, you need a demo using renin to mess around with.
+Make sure that the demo referenes your local renin repo and files and not the published packages, or you will grow frustrated that none of you changes seem to take effect.
+To use the repo, in your demos `package.json` file, in the `dependencises` section, make sure the `renin` entry refers to `file:./../renin/renin`.
+
+See this example :
+
+```json
+{
+  "...": "...",
+  "dependencies": {
+    "...": "...",
+    "@types/three": "*",
+    "renin": "file:./../renin/renin",
+    "seedrandom": "^3.0.5",
+    "three": "*",
+    "...": "...",
+  },
+  "...": "...",
+}
+```
 # Known renin demos
 
 - [Ninjadev - The Tale of the Bluebird & the Dragon](https://www.pouet.net/prod.php?which=91820)
