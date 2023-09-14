@@ -137,8 +137,7 @@ Rendering to video has not been implemented yet.
 | V        | Toggle repeat of current beat                                                                                     |
 | B        | Toggle repeat of current bar                                                                                      |
 | N        | Toggle repeat of current 4 bars                                                                                   |
-| G        | Set cue point for loop. The first time you press it, it sets the "go back here point". Second time sets "go back
-             once you reach this point". Third time removes the points.                                                        |
+| G        | Set/toggle loop cue points (set start, set end, remove)                                                           |
 | shift+J  | Go back one frame                                                                                                 |
 | shift+K  | Go forward one frame                                                                                              |
 | shift+H  | Go to start                                                                                                       |
@@ -156,7 +155,7 @@ Rendering to video has not been implemented yet.
 
 Typically, to debug renin, you need a demo using renin to mess around with.
 Make sure that the demo referenes your local renin repo and files and not the published packages, or you will grow frustrated that none of you changes seem to take effect.
-To use the repo, in your demos `package.json` file, in the `dependencises` section, make sure the `renin` entry refers to `file:./../renin/renin`.
+To use the repo, in your demos `package.json` file, in the `dependencies` section, make sure the `renin` entry refers to `file:./../renin/renin`.
 
 See this example :
 
