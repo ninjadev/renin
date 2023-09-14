@@ -54,8 +54,8 @@ projects/
 </details>
 <br>
 
-When you are setting this up for the first time, it's imortant that you restore packages for and build renin before restoring packages for your new demo.
-Yarn caches somewhat agressively, and your repeated attempts to rebuild your new demo will fail untill you delte node_modules, wich basically is starting from scratch build-wise.
+When you are setting this up for the first time, it's important that you restore packages for and build renin before restoring packages for your new demo.
+Yarn caches somewhat aggressively, and your repeated attempts to rebuild your new demo will fail until you delete node_modules, which basically is starting from scratch build-wise.
 
 The setup therefore becomes
 
@@ -93,7 +93,7 @@ At this point you will get a folder named "dist/" in your demo project.
 It will contain an index.html file, and a directory with all needed assets.
 To run it you unfortunately can't just trust the content you made yourself locally on your machine and open it in a browser directly.
 You'll have to spin it up in a server and access it through localhost.
-The snippet below should work reasonably well cross plattform and enable you to enjoy your work at http://localhost:3000.
+The snippet below should work reasonably well cross-platform and enable you to enjoy your work at http://localhost:3000
 
 ```shell
 cd projects/new-demo/dist
@@ -118,8 +118,7 @@ Currently, basic editing, live-reloading and jogging is implemented.
 Compilation/export is sort of implemented, but could use some more polish.
 As such, it should be able to make a demo with this already :tada:
 
-Rendering to video has not been implemented yet.
-
+Rendering to video can be done like this: [#92](https://github.com/ninjadev/renin/pull/92)
 
 <br/>
 
@@ -137,8 +136,7 @@ Rendering to video has not been implemented yet.
 | V        | Toggle repeat of current beat                                                                                     |
 | B        | Toggle repeat of current bar                                                                                      |
 | N        | Toggle repeat of current 4 bars                                                                                   |
-| G        | Set cue point for loop. The first time you press it, it sets the "go back here point". Second time sets "go back
-             once you reach this point". Third time removes the points.                                                        |
+| G        | Set or remove loop cue points (set start, set end, remove both)                                                   |
 | shift+J  | Go back one frame                                                                                                 |
 | shift+K  | Go forward one frame                                                                                              |
 | shift+H  | Go to start                                                                                                       |
@@ -155,8 +153,8 @@ Rendering to video has not been implemented yet.
 # Debugging renin
 
 Typically, to debug renin, you need a demo using renin to mess around with.
-Make sure that the demo referenes your local renin repo and files and not the published packages, or you will grow frustrated that none of you changes seem to take effect.
-To use the repo, in your demos `package.json` file, in the `dependencises` section, make sure the `renin` entry refers to `file:./../renin/renin`.
+Make sure that the demo references your local renin repo and files and not the published packages, or you will grow frustrated that none of you changes seem to take effect.
+To use the repo, in your demos `package.json` file, in the `dependencies` section, make sure the `renin` entry refers to `file:./../renin/renin`.
 
 See this example :
 
@@ -174,6 +172,7 @@ See this example :
   "...": "...",
 }
 ```
+
 # Known renin demos
 
 - [Ninjadev - The Tale of the Bluebird & the Dragon](https://www.pouet.net/prod.php?which=91820)
