@@ -163,7 +163,7 @@
     "@rollup/pluginutils" "^4.2.1"
     resolve "^1.22.1"
 
-"@rollup/pluginutils@^3.0.9":
+"@rollup/pluginutils@^3.0.9", "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-3.1.0.tgz#706b4524ee6dc8b103b3c995533e5ad680c02b9b"
   integrity sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==
@@ -493,6 +493,13 @@ resolve@^1.22.1:
     is-core-module "^2.9.0"
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
+
+rollup-plugin-base64@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-base64/-/rollup-plugin-base64-1.0.1.tgz#b3529b94d23baeb66e1e3bffd04477fa792985eb"
+  integrity sha512-IbdX8fjuXO/Op3hYmRPjVo0VwcSenwsQDaDTFdoe+70B5ZGoLMtr96L2yhHXCfxv7HwZVvxZqLsuWj6VwzRt3g==
+  dependencies:
+    "@rollup/pluginutils" "^3.1.0"
 
 rollup-plugin-import-css@^3.0.3:
   version "3.0.3"

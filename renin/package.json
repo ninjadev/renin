@@ -22,6 +22,7 @@
     "@types/three": "^0.144.0",
     "prettier": "^2.7.1",
     "rollup": "^2.70.2",
+    "rollup-plugin-base64": "1.0.1",
     "rollup-plugin-import-css": "^3.0.3",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-string": "^3.0.0",
