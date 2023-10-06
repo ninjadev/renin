@@ -17,7 +17,7 @@ export class FlatLand extends ReninNode {
   public resize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
-    console.log(width, height);
+    this.texture = new CanvasTexture(this.canvas);
   }
 
   public render(frame: number, _renderer: WebGLRenderer, renin: Renin) {
