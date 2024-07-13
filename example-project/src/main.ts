@@ -35,6 +35,8 @@ if(enableStartupOverlay) {
   document.body.appendChild(overlay);
 
   if (import.meta.env.PROD) {
+    const aspectRatio = 16.0/9.0; // Would probably be more efficient to just write 1.7778, but this happens only once, is cheap, and more readable this way
+
     var demoName = "Example Project";
     var crew = "Demo Group";
     var party = "Demo Party";
@@ -68,11 +70,10 @@ if(enableStartupOverlay) {
       renin.isFullscreen = true;
       let width = window.innerWidth * 2;
       let height = window.innerHeight * 2;
-      const ratio = 2.35;
-      if (width / height >= ratio) {
-        width = height * ratio;
+      if (width / height >= aspectRatio) {
+        width = height * aspectRatio;
       } else {
-        height = width / ratio;
+        height = width / aspectRatio;
       }
       renin.resize(width, height);
 
@@ -118,11 +119,10 @@ if(enableStartupOverlay) {
         delay(1000);
         let width = window.innerWidth;
         let height = window.innerHeight;
-        const ratio = 2.35;
-        if (width / height >= ratio) {
-          width = height * ratio;
+        if (width / height >= aspectRatio) {
+          width = height * aspectRatio;
         } else {
-          height = width / ratio;
+          height = width / aspectRatio;
         }
         renin.renderer.domElement.width = width;
         renin.renderer.domElement.height = height;
