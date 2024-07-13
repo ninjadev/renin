@@ -1,6 +1,6 @@
 {
   "name": "renin-example-project",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
   "private": true,
   "scripts": {
@@ -10,13 +10,21 @@
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "*",
-    "typescript": "*",
+    "prettier": "^2.8.8",
     "vite": "*",
     "vite-plugin-string": "*"
   },
   "dependencies": {
-    "@types/three": "*",
-    "renin": "*",
-    "three": "*"
+    "@babylonjs/havok": "^1.0.0",
+    "@types/seedrandom": "^3.0.5",
+    "@types/three": "0.150.1",
+    "postprocessing": "^6.32.2",
+    "react": "^18.2.0",
+    "renin": "file:./../renin/renin",
+    "screen-space-reflections": "^2.5.0",
+    "seedrandom": "^3.0.5",
+    "three": "0.150.1",
+    "three-custom-shader-material": "5.2.0",
+    "typescript": "^5.1.6"
   }
 }

@@ -19,6 +19,14 @@ export class SceneSwitcher extends ReninNode {
   camera = new OrthographicCamera(-1, 1, 1, -1);
   renderTarget = new WebGLRenderTarget(640, 360);
   screen = new Mesh(new BoxGeometry(2, 2, 2), new MeshBasicMaterial());
+
+  // @ts-ignore
+  children: {
+    flatland: FlatLand;
+    jumpingbox: JumpingBox;
+    spinningcube: SpinningDonut;
+  };
+
   public resize(width: number, height: number) {
     this.renderTarget.setSize(width, height);
   }
@@ -26,20 +34,17 @@ export class SceneSwitcher extends ReninNode {
   constructor(renin: Renin) {
     super(renin);
 
-    this.children = children<{
-      spinningcube: SpinningDonut;
-      flatland: FlatLand;
-      jumpingbox: JumpingBox;
-    }>({
-      spinningcube: new SpinningDonut(renin),
+    this.children = children({
       flatland: new FlatLand(renin),
       jumpingbox: new JumpingBox(renin),
+      spinningcube: new SpinningDonut(renin),
     });
     this.scene.add(this.screen);
     this.scene.add(this.camera);
     this.camera.position.z = 10;
   }
 
+  // @ts-ignore
   public render(frame: number, renderer: WebGLRenderer) {
     this.screen.material.map = null;
     if (this.children?.jumpingbox.isActive) {

@@ -6,6 +6,7 @@ import {
   Color,
   DoubleSide,
   FloatType,
+  // @ts-ignore
   LinearEncoding,
   Mesh,
   MeshBasicMaterial,
@@ -39,6 +40,7 @@ export class JumpingBox extends ReninNode {
   /* In the constructor we set up our scene. */
   constructor(renin: Renin) {
     super(renin);
+    // @ts-ignore
     this.cube = new Mesh(
       new BoxGeometry(),
       new ShaderMaterial({
@@ -76,6 +78,7 @@ export class JumpingBox extends ReninNode {
     this.renderTarget.setSize(width, height);
   }
 
+  // @ts-ignore
   public render(frame: number, renderer: WebGLRenderer, renin: Renin) {
     /* Since these animation updates are not stateful, we do
      * them "on-demand" in the render method. If they were stateful,
@@ -111,6 +114,7 @@ export class JumpingBox extends ReninNode {
      * to the renderTarget, making the output available to the parent node. */
     renderer.setRenderTarget(this.renderTarget);
     renderer.toneMapping = NoToneMapping;
+    // @ts-ignore
     renderer.outputEncoding = LinearEncoding;
     renderer.render(this.scene, this.camera);
   }
