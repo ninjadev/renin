@@ -18,7 +18,7 @@ services:
       - -c
       - |
         if [ "$$CLEAN_BUILD_RENIN" == "true" ]; then
-          echo "Rebuilding Renin"
+          echo "Rebuilding Renin from scratch"
           rm -rf /demos/ninjadev/renin/renin/node_modules
           pushd /demos/ninjadev/renin/renin
           yarn install
@@ -27,18 +27,25 @@ services:
           echo "Done rebuilding Renin"
         fi
         if [ "$$CLEAN_BUILD_DEMO" == "true" ] || [ "$$EXPORT_AND_HOST_FINAL_VERSION" == "true" ]; then
-          echo "Rebuilding demo"
+          echo "Rebuilding demo from scratch"
           rm -rf /demos/ninjadev/demo/node_modules
           rm -rf /demos/ninjadev/demo/dist
           pushd /demos/ninjadev/demo
           yarn install
           popd
-          echo "Donre rebuilding demo"
+          echo "Done cleaning demo and restoring yarn packages"
         fi
         if [ "$$EXPORT_AND_HOST_FINAL_VERSION" == "true" ]; then
           echo "Building final version of demo"
           pushd /demos/ninjadev/demo
           yarn build
+          echo "Done building final version of demo"
+
+          if [ ! -d "/demos/ninjadev/demo/dist" ]; then
+            echo -e "ERROR /demos/ninjadev/demo/dist/ does not exist.\n\tWhich means that the build failed.\n\tSleeping container in case you want to dig around inside the container to debug.\n"
+            sleep infinity
+            exit
+          fi
 
           echo "Starting hosting of final build of demo on 3000"
           pushd /demos/ninjadev/demo/dist
