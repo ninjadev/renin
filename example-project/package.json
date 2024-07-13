@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@types/three": "*",
-    "renin": "*",
+    "renin": "file:../renin/renin",
     "three": "*"
   }
 }
