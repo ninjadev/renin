@@ -20,6 +20,7 @@ export class FlatLand extends ReninNode {
     this.texture = new CanvasTexture(this.canvas);
   }
 
+  // @ts-ignore
   public render(frame: number, _renderer: WebGLRenderer, renin: Renin) {
     if (!this.ctx) {
       return;

@@ -3,12 +3,14 @@ import { Renin } from 'renin/lib/renin';
 import { PostFx } from './PostFx';
 
 export const renin = new Renin({
+  // @ts-ignore
   music: {
     src: music,
     bpm: 114,
     subdivision: 12,
     beatOffset: 4,
   },
+      // @ts-ignore
   root: PostFx,
   productionMode: import.meta.env.PROD,
   rendererOptions: {
@@ -35,7 +37,8 @@ if(enableStartupOverlay) {
   document.body.appendChild(overlay);
 
   if (import.meta.env.PROD) {
-    const aspectRatio = 16.0/9.0; // Would probably be more efficient to just write 1.7778, but this happens only once, is cheap, and more readable this way
+    // @ts-ignore
+    const aspectRatio = renin.aspectRatio; // Would probably be more efficient to just write 1.7778, but this happens only once, is cheap, and more readable this way
 
     var demoName = "Example Project";
     var crew = "Demo Group";

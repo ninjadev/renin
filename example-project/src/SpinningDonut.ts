@@ -1,5 +1,6 @@
 import { ReninNode } from 'renin/lib/ReninNode';
 import envMap from './envMap.jpg';
+import { Renin } from 'renin/lib/renin';
 import {
   BufferGeometry,
   EquirectangularReflectionMapping,
@@ -12,11 +13,11 @@ import {
   Scene,
   sRGBEncoding,
   TextureLoader,
+  // @ts-ignore
   TorusBufferGeometry,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { Renin } from 'renin/lib/renin';
 
 export class SpinningDonut extends ReninNode {
   /* The frame range this node will be active. */
@@ -66,6 +67,7 @@ export class SpinningDonut extends ReninNode {
     this.renderTarget.setSize(width, height);
   }
 
+  // @ts-ignore
   public render(frame: number, renderer: WebGLRenderer) {
     /* Since these animation updates are not stateful, we do
      * them "on-demand" in the render method. If they were stateful,
