@@ -30,6 +30,7 @@ import { thirdsOverlayTexture } from './ui/thirdsOverlay';
 import { performancePanelTexture } from './ui/performancePanelTexture';
 import { ColorManagement } from 'three/src/math/ColorManagement';
 import { getSetting, setSetting } from './ui/storedSettings';
+import reninSoundUrl from './ui/renin.mp3';
 
 /* otherwise it won't be added to the build */
 export * as vite from './ui/vite';
@@ -251,7 +252,16 @@ export class Renin {
 
     this.scene.add(this.audioBar.obj);
 
-    this.music.setVolume(getSetting('volume'));
+    const initialVolume = getSetting('volume');
+    this.music.setVolume(initialVolume);
+
+    if (!this.options.productionMode && initialVolume) {
+      (async () => {
+        const startupSound = new Audio();
+        startupSound.autoplay = true;
+        startupSound.src = 'data:audio/mp3;base64,' + reninSoundUrl;
+      })();
+    }
 
     (async () => {
       const response = await fetch(options.music.src);
