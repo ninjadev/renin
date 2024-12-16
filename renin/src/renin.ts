@@ -66,6 +66,8 @@ export interface Options {
   maxHeight?: number;
 }
 
+const stored = JSON.parse(localStorage.getItem('renin:stored') || '{}');
+
 export class Renin {
   static instance: Renin;
   width: number = 1;
@@ -73,7 +75,7 @@ export class Renin {
   audioBar: AudioBar;
   music = new Music();
   sync: Sync;
-  frame = 0;
+  frame = stored.frame || 0;
   oldTime: number = 0;
   time: number = 0;
   dt: number = 0;
@@ -425,6 +427,9 @@ export class Renin {
         this.music.setPlaybackRate(playbackRates[e.key]);
       }
     });
+    if (stored.frame) {
+      this.jumpToFrame(stored.frame);
+    }
   }
 
   startRealTimeScreenRecording() {
@@ -654,6 +659,13 @@ export class Renin {
     if (this.options.productionMode) {
       return false;
     }
+    localStorage.setItem(
+       'renin:stored',
+       JSON.stringify({
+         frame: this.frame,
+         cuePoints: this.cuePoints.length > 0 ? this.cuePoints : null,
+       })
+     );
     let needsRenderAfter = false;
     const time = performance.now();
     needsRenderAfter ||= this.fullscreenAnimation.update(this.uiTime);
